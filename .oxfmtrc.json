@@ -1,0 +1,36 @@
+{
+  "indentStyle": "tab",
+  "indentWidth": 2,
+  "quoteStyle": "double",
+  "experimentalSortImports": {
+    "groups": ["builtin", "external", "internal", ["parent", "sibling", "index"]],
+    "internalPattern": ["@agroproj/", "@/", "~/"],
+    "newlinesBetween": true,
+    "ignoreCase": true
+  },
+  "experimentalTailwindcss": {
+    "attributes": ["class", "className", "textClassName"],
+    "functions": ["clsx", "cn", "cva", "tw", "twMerge"]
+  },
+  "ignorePatterns": [
+    "**/node_modules",
+    "**/dist",
+    "**/_generated",
+    "**/.turbo",
+    "**/coverage",
+    "**/.expo",
+    "**/src-tauri",
+    "**/.clerk",
+    "**/.cache",
+    "**/.output",
+    "**/.next",
+    "**/.tanstack",
+    "**/*.d.ts",
+    "**/routeTree.gen.ts",
+    "apps/web-old",
+    "**/.auth",
+    "**/.whatsapp-auth",
+    "**/test-results",
+    "**/playwright-report"
+  ]
+}

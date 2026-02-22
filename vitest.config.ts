@@ -1,7 +1,11 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ['src/**/*.test.ts', 'setup/**/*.test.ts', 'skills-engine/**/*.test.ts'],
+    include: [
+      "apps/*/src/**/*.test.ts",
+      "apps/backend/convex/**/*.test.ts",
+      "packages/*/src/**/*.test.ts",
+    ],
   },
 });
