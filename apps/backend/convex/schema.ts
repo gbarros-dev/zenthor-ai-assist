@@ -1,5 +1,8 @@
 import { defineSchema } from "convex/server";
 
+import { agentQueueTable } from "./schemas/agent_queue";
+import { conversationsTable } from "./schemas/conversations";
+import { messagesTable } from "./schemas/messages";
 import { noteFoldersTable } from "./schemas/note_folders";
 import { notesTable } from "./schemas/notes";
 import { organizationMembersTable } from "./schemas/organization_members";
@@ -14,4 +17,8 @@ export default defineSchema({
 
   notes: notesTable,
   noteFolders: noteFoldersTable,
+
+  conversations: conversationsTable,
+  messages: messagesTable,
+  agentQueue: agentQueueTable,
 });
