@@ -1,0 +1,22 @@
+{
+  "name": "@zenthor-ai-assist/tui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "bun --watch src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mariozechner/pi-coding-agent": "^0.55.0"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@zenthor-ai-assist/config": "workspace:*",
+    "tsx": "^4.19.0",
+    "typescript": "catalog:"
+  }
+}
