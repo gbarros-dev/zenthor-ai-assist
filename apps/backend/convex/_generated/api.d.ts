@@ -26,6 +26,7 @@ import type * as schemas_notes from "../schemas/notes.js";
 import type * as schemas_organization_members from "../schemas/organization_members.js";
 import type * as schemas_organizations from "../schemas/organizations.js";
 import type * as schemas_users from "../schemas/users.js";
+import type * as tuiSync from "../tuiSync.js";
 import type * as types_auth from "../types/auth.js";
 import type * as users from "../users.js";
 
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   "schemas/organization_members": typeof schemas_organization_members;
   "schemas/organizations": typeof schemas_organizations;
   "schemas/users": typeof schemas_users;
+  tuiSync: typeof tuiSync;
   "types/auth": typeof types_auth;
   users: typeof users;
 }>;
