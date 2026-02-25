@@ -78,6 +78,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@mariozechner/pi-coding-agent": "^0.55.0",
+        "convex": "catalog:",
       },
       "devDependencies": {
         "@types/node": "catalog:",

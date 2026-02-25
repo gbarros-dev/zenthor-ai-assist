@@ -7,6 +7,9 @@ import {
   InteractiveMode,
   ModelRegistry,
 } from "@mariozechner/pi-coding-agent";
+import type { Message } from "@mariozechner/pi-ai";
+
+import { createConvexSync } from "./convex-sync.js";
 
 const AGENT_DIR = join(homedir(), ".zenthor");
 
@@ -23,6 +26,23 @@ function resolveCredential(): string {
   );
 }
 
+function extractText(message: Message): string {
+  if (message.role === "user") {
+    if (typeof message.content === "string") return message.content;
+    return message.content
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("");
+  }
+  if (message.role === "assistant") {
+    return message.content
+      .filter((b): b is { type: "text"; text: string } => b.type === "text")
+      .map((b) => b.text)
+      .join("");
+  }
+  return "";
+}
+
 async function main(): Promise<void> {
   const credential = resolveCredential();
 
@@ -37,6 +57,49 @@ async function main(): Promise<void> {
     modelRegistry,
   });
 
+  // ── Convex sync (optional) ───────────────────────────────────────────
+  const sync = createConvexSync();
+  if (sync) {
+    try {
+      await sync.init();
+    } catch (error) {
+      console.error(
+        "[convex-sync] init failed, continuing without sync:",
+        error instanceof Error ? error.message : error,
+      );
+    }
+
+    let lastSyncedCount = 0;
+
+    session.subscribe((event) => {
+      if (event.type !== "agent_end") return;
+
+      const messages = session.messages;
+      const newMessages = messages.slice(lastSyncedCount);
+      lastSyncedCount = messages.length;
+
+      for (const msg of newMessages) {
+        if (msg.role === "user" || msg.role === "assistant") {
+          const text = extractText(msg as Message);
+          if (!text) continue;
+
+          const modelUsed =
+            msg.role === "assistant"
+              ? (msg as { model?: string }).model
+              : undefined;
+
+          sync.syncMessage(
+            msg.role,
+            text,
+            modelUsed,
+            msg.timestamp,
+          );
+        }
+      }
+    });
+  }
+
+  // ── TUI ──────────────────────────────────────────────────────────────
   const mode = new InteractiveMode(session, {
     modelFallbackMessage,
   });
