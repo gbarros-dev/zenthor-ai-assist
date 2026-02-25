@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./web": "./src/web.ts",
-    "./ai-agent": "./src/ai-agent.ts"
+    "./web": "./src/web.ts"
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.13.1",

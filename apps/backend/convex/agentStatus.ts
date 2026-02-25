@@ -12,14 +12,9 @@ export const isProcessing = authQuery({
 
     const activeJob = await ctx.db
       .query("agentQueue")
-      .withIndex("by_conversation", (q) =>
-        q.eq("conversationId", args.conversationId),
-      )
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
       .filter((q) =>
-        q.or(
-          q.eq(q.field("status"), "pending"),
-          q.eq(q.field("status"), "processing"),
-        ),
+        q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "processing")),
       )
       .first();
 

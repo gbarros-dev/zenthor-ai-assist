@@ -22,10 +22,10 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 
 ### Files
 
-| File | Purpose |
-|------|---------|
-| `container/agent-runner/src/index.ts` | Main entry: stdin parsing, Claude SDK query loop, IPC polling |
-| `container/agent-runner/src/ipc-mcp-stdio.ts` | MCP stdio server providing tools to the agent |
+| File                                          | Purpose                                                       |
+| --------------------------------------------- | ------------------------------------------------------------- |
+| `container/agent-runner/src/index.ts`         | Main entry: stdin parsing, Claude SDK query loop, IPC polling |
+| `container/agent-runner/src/ipc-mcp-stdio.ts` | MCP stdio server providing tools to the agent                 |
 
 ### Dependencies
 
@@ -62,9 +62,9 @@ Push-based async iterable that keeps the conversation alive:
 
 ```typescript
 class MessageStream {
-  push(text: string)    // Add user message (from IPC polling)
-  end()                 // Signal no more messages
-  [Symbol.asyncIterator]()
+  push(text: string); // Add user message (from IPC polling)
+  end(); // Signal no more messages
+  [Symbol.asyncIterator]();
 }
 ```
 
@@ -77,29 +77,29 @@ query({
   initialMessage: prompt,
   sessionId: id,
   resumeSession: true,
-  settingSources: ['project'],    // Auto-loads CLAUDE.md files
+  settingSources: ["project"], // Auto-loads CLAUDE.md files
   mcpServers: { nanoclaw: customMcpServer },
   hooks: {
-    PreToolUse: sanitizeBash,     // Strip credentials from env
-    PreCompact: archiveTranscript  // Save transcript before compaction
-  }
-})
+    PreToolUse: sanitizeBash, // Strip credentials from env
+    PreCompact: archiveTranscript, // Save transcript before compaction
+  },
+});
 ```
 
 ### MCP Tools Available to Agent
 
-| Tool | Description |
-|------|-------------|
-| `send_message(jid, text, sender?)` | Send WhatsApp/Telegram message |
-| `schedule_task(prompt, type, value, target_jid?)` | Create scheduled task |
-| `list_tasks()` | List all scheduled tasks |
-| `get_task(id)` | Get task details |
-| `update_task(id, ...)` | Modify task |
-| `pause_task(id)` | Pause task |
-| `resume_task(id)` | Resume task |
-| `cancel_task(id)` | Cancel task |
-| `activate_group(jid)` | Switch to another group (main only) |
-| `refresh_groups()` | Re-sync group list (main only) |
+| Tool                                              | Description                         |
+| ------------------------------------------------- | ----------------------------------- |
+| `send_message(jid, text, sender?)`                | Send WhatsApp/Telegram message      |
+| `schedule_task(prompt, type, value, target_jid?)` | Create scheduled task               |
+| `list_tasks()`                                    | List all scheduled tasks            |
+| `get_task(id)`                                    | Get task details                    |
+| `update_task(id, ...)`                            | Modify task                         |
+| `pause_task(id)`                                  | Pause task                          |
+| `resume_task(id)`                                 | Resume task                         |
+| `cancel_task(id)`                                 | Cancel task                         |
+| `activate_group(jid)`                             | Switch to another group (main only) |
+| `refresh_groups()`                                | Re-sync group list (main only)      |
 
 ## Mount Structure
 
@@ -122,21 +122,22 @@ query({
 
 ### Host -> Container
 
-| Path | Purpose |
-|------|---------|
+| Path                             | Purpose                                   |
+| -------------------------------- | ----------------------------------------- |
 | `/workspace/ipc/input/{id}.json` | Follow-up user messages (polled by agent) |
-| `/workspace/ipc/input/_close` | Graceful shutdown sentinel |
+| `/workspace/ipc/input/_close`    | Graceful shutdown sentinel                |
 
 ### Container -> Host
 
-| Path | Content |
-|------|---------|
-| `/workspace/ipc/messages/{id}.json` | `{"type":"message","chatJid":"...","text":"..."}` |
-| `/workspace/ipc/tasks/{id}.json` | `{"type":"create_task","prompt":"...","schedule_type":"cron",...}` |
+| Path                                | Content                                                            |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `/workspace/ipc/messages/{id}.json` | `{"type":"message","chatJid":"...","text":"..."}`                  |
+| `/workspace/ipc/tasks/{id}.json`    | `{"type":"create_task","prompt":"...","schedule_type":"cron",...}` |
 
 Host IPC watcher polls every 1 second, processes files, then deletes them.
 
 **Authorization rules:**
+
 - Main group can send messages to any group
 - Non-main can only send to own group
 - Main sees all tasks, non-main sees own only
@@ -162,8 +163,8 @@ Host IPC watcher polls every 1 second, processes files, then deletes them.
 ```json
 {
   "allowedRoots": [
-    {"path": "~/projects", "allowReadWrite": true},
-    {"path": "/var/repos", "allowReadWrite": false}
+    { "path": "~/projects", "allowReadWrite": true },
+    { "path": "/var/repos", "allowReadWrite": false }
   ],
   "blockedPatterns": [".ssh", ".gnupg", "*.key", ".env", "credentials"],
   "nonMainReadOnly": true

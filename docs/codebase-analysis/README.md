@@ -7,6 +7,7 @@ Complete analysis of the NanoClaw project for building a personal assistant focu
 NanoClaw is a **lightweight personal Claude assistant** that runs in containers and communicates via WhatsApp. It's a minimal, security-first alternative to OpenClaw with ~24K LoC (vs OpenClaw's ~569K).
 
 **Key Stats:**
+
 - ~117 TypeScript files, ~24K lines of code
 - 9 runtime dependencies
 - 11 Claude Code skills
@@ -15,13 +16,13 @@ NanoClaw is a **lightweight personal Claude assistant** that runs in containers 
 
 ## Documentation Index
 
-| # | File | Contents |
-|---|------|----------|
-| 1 | [Architecture](./01-architecture.md) | Full message flow, component diagram, data flow |
-| 2 | [Source Code](./02-source-code.md) | Every file explained, key data structures |
-| 3 | [Container System](./03-container-system.md) | Agent runner, mounts, IPC, security |
-| 4 | [Skills & Setup](./04-skills-and-setup.md) | All 11 skills, setup process, skills engine |
-| 5 | [Product Plan](./05-product-plan.md) | What to build for notes, Todoist, Linear |
+| #   | File                                         | Contents                                        |
+| --- | -------------------------------------------- | ----------------------------------------------- |
+| 1   | [Architecture](./01-architecture.md)         | Full message flow, component diagram, data flow |
+| 2   | [Source Code](./02-source-code.md)           | Every file explained, key data structures       |
+| 3   | [Container System](./03-container-system.md) | Agent runner, mounts, IPC, security             |
+| 4   | [Skills & Setup](./04-skills-and-setup.md)   | All 11 skills, setup process, skills engine     |
+| 5   | [Product Plan](./05-product-plan.md)         | What to build for notes, Todoist, Linear        |
 
 ## Quick Reference
 

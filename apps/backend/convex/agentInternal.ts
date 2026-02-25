@@ -17,9 +17,7 @@ export const getConversationMessages = internalQuery({
   handler: async (ctx, args) => {
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_conversation_created", (q) =>
-        q.eq("conversationId", args.conversationId),
-      )
+      .withIndex("by_conversation_created", (q) => q.eq("conversationId", args.conversationId))
       .filter((q) => q.eq(q.field("status"), "sent"))
       .order("asc")
       .take(args.limit);

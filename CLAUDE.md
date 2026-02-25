@@ -13,7 +13,8 @@ Personal AI assistant for notes, reminders, and work management. Built on NanoCl
 
 ## Product Goal
 
-A personal AI assistant accessible via WhatsApp (and optionally web UI) focused on:
+A personal AI assistant accessible via TUI (terminal) and optionally web UI, focused on:
+
 1. **Notes & Documentation** — Capture, organize, search, and retrieve notes
 2. **Reminders via Todoist** — Create, manage, and track tasks/reminders through the Todoist API
 3. **Work Management via Linear** — Manage issues, track priorities through the Linear API (optional)
@@ -22,10 +23,10 @@ See [docs/PLAN.md](docs/PLAN.md) for the full implementation plan and phasing.
 
 ## Architecture
 
-Bun workspaces + Turborepo monorepo with four apps and shared packages:
+Bun workspaces + Turborepo monorepo:
 
 ```
-apps/ai-agent/      — WhatsApp AI agent (Node.js, Claude Agent SDK in containers) — legacy SQLite path
+apps/tui/           — Terminal UI (pi-coding-agent, primary interface)
 apps/agent-worker/  — External worker service (pi-agent-core loop, polls Convex queue)
 apps/web/           — Next.js web UI (chat UI wired to Convex)
 apps/backend/       — Convex backend (persistence, queue, auth via Clerk)
@@ -34,16 +35,14 @@ packages/env/       — Zod environment validators
 packages/observability/ — Logging
 ```
 
-### Architecture in Transition
+### TUI (`apps/tui/`)
 
-The codebase is mid-refactor from a SQLite-based architecture to Convex as the primary persistence and queue layer. See [docs/PI_MONO_CONVEX_REFACTOR.md](docs/PI_MONO_CONVEX_REFACTOR.md) for the full migration plan.
+Primary interface. Uses `@mariozechner/pi-coding-agent` with `createAgentSession()` + `InteractiveMode`. Supports multiple providers (Anthropic, OpenAI, OpenAI-Codex) with env-based auto-detection. Optionally syncs messages to Convex via `convex-sync.ts` when `CONVEX_URL` + `CONVEX_ADMIN_KEY` are set.
 
-**Target Architecture:**
+### Web UI + Agent Worker Architecture
+
 ```
-Web UI / WhatsApp adapter
-        |
-        v
-Convex mutations (conversations, messages)
+Web UI → Convex mutations (conversations, messages)
         |
         v
 agentQueue (pending jobs)
@@ -53,12 +52,6 @@ apps/agent-worker (pi-agent-core loop, polls Convex)
         |
         +--> stream deltas → messages.updateStreamingContent
         +--> finalize     → messages.finalizeMessage + agentQueue.complete
-```
-
-**Legacy path (still active for WhatsApp):**
-```
-WhatsApp → SQLite → Poll loop (2s) → Trigger match → GroupQueue (max 5 concurrent)
-→ Docker container → Claude Agent SDK (query()) → IPC → WhatsApp response
 ```
 
 ### Convex Schema
@@ -90,89 +83,37 @@ bun run check          # Lint + format check
 bunx convex dev        # Start Convex dev server (hot reload + codegen)
 bunx convex dev --once # Validate + regenerate types once, then exit
 
+# TUI (from apps/tui/)
+bun run dev            # Run with bun --watch
+
 # Agent worker (from apps/agent-worker/)
 bun run dev            # Run with tsx hot reload
-
-# AI Agent — WhatsApp (from apps/ai-agent/)
-bun run dev            # Run with hot reload
-./container/build.sh   # Rebuild agent container
-```
-
-Service management:
-```bash
-# macOS (launchd)
-launchctl load ~/Library/LaunchAgents/com.nanoclaw.plist
-launchctl kickstart -k gui/$(id -u)/com.nanoclaw  # restart
-
-# Linux (systemd)
-systemctl --user start nanoclaw
-systemctl --user restart nanoclaw
 ```
 
 ## Key Files
 
 ### Convex Backend (`apps/backend/convex/`)
-| File | Purpose |
-|------|---------|
-| `schema.ts` | Assembles all table schemas |
-| `schemas/` | Per-table schema definitions |
-| `conversations.ts` | `getOrCreate` mutation for conversation lifecycle |
-| `messages.ts` | `send` mutation (enqueues job), `list` query (real-time) |
-| `agentWorker.ts` | Internal worker API: `claimNextPendingJob`, `updateStreamingContent`, `completeJob`, `failJob` |
-| `agent.ts` | In-Convex agent logic (being replaced by external worker) |
-| `auth.ts` / `http.ts` | Clerk webhook ingestion and auth config |
-| `users.ts` | User management tied to Clerk |
+
+| File                  | Purpose                                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| `schema.ts`           | Assembles all table schemas                                                                    |
+| `schemas/`            | Per-table schema definitions                                                                   |
+| `conversations.ts`    | `getOrCreate` mutation for conversation lifecycle                                              |
+| `messages.ts`         | `send` mutation (enqueues job), `list` query (real-time)                                       |
+| `agentWorker.ts`      | Internal worker API: `claimNextPendingJob`, `updateStreamingContent`, `completeJob`, `failJob` |
+| `agent.ts`            | In-Convex agent logic (being replaced by external worker)                                      |
+| `auth.ts` / `http.ts` | Clerk webhook ingestion and auth config                                                        |
+| `users.ts`            | User management tied to Clerk                                                                  |
 
 ### Agent Worker (`apps/agent-worker/src/`)
-| File | Purpose |
-|------|---------|
+
+| File       | Purpose                                             |
+| ---------- | --------------------------------------------------- |
 | `index.ts` | pi-agent-core loop: claim → run → stream → complete |
 
-### AI Agent Host (`apps/ai-agent/src/`)
-| File | Purpose |
-|------|---------|
-| `index.ts` | Orchestrator: state, message loop, agent invocation |
-| `channels/whatsapp.ts` | WhatsApp connection, auth, send/receive |
-| `db.ts` | SQLite: messages, sessions, tasks, groups, notes |
-| `container-runner.ts` | Spawns agent containers, parses OUTPUT markers |
-| `group-queue.ts` | Per-group FIFO queue, global concurrency (max 5 containers) |
-| `ipc.ts` | File-based IPC watcher: messages, tasks, notes |
-| `config.ts` | Trigger pattern, paths, intervals, timeouts |
+### TUI (`apps/tui/src/`)
 
-### Container (`apps/ai-agent/container/agent-runner/src/`)
-| File | Purpose |
-|------|---------|
-| `index.ts` | Agent entry: Claude SDK query(), MessageStream, IPC polling |
-| `ipc-mcp-stdio.ts` | MCP tools: send_message, schedule_task, notes, todoist, linear |
-
-### Memory & Config
-| File | Purpose |
-|------|---------|
-| `apps/ai-agent/groups/global/CLAUDE.md` | Persona, capabilities, tool usage instructions (all groups) |
-| `apps/ai-agent/groups/main/CLAUDE.md` | Admin-only extended capabilities |
-| `apps/ai-agent/groups/{name}/CLAUDE.md` | Per-group custom behavior and memory |
-
-## Adding New MCP Tools (AI Agent / WhatsApp path)
-
-**Pattern A — IPC-based (for local data, e.g. notes):**
-1. Add tool definition in `apps/ai-agent/container/agent-runner/src/ipc-mcp-stdio.ts`
-2. Tool writes JSON to `/workspace/ipc/{feature}/` directory
-3. Add IPC handler in `apps/ai-agent/src/ipc.ts`
-4. Add database queries in `apps/ai-agent/src/db.ts`
-
-**Pattern B — Direct API (for external services, e.g. todoist, linear):**
-1. Create API client in `apps/ai-agent/container/agent-runner/src/{service}.ts`
-2. Register tools in `apps/ai-agent/container/agent-runner/src/ipc-mcp-stdio.ts`
-3. Pass API token via `apps/ai-agent/src/container-runner.ts` env passthrough
-
-## Container Build Cache
-
-The container buildkit caches aggressively. `--no-cache` alone does NOT invalidate COPY steps — the builder's volume retains stale files. To force a truly clean rebuild, prune the builder then re-run `./container/build.sh`.
-
-## Skills
-
-| Skill | When to Use |
-|-------|-------------|
-| `/setup` | First-time installation, authentication, service configuration |
-| `/customize` | Adding channels, integrations, changing behavior |
-| `/debug` | Container issues, logs, troubleshooting |
+| File             | Purpose                                                                   |
+| ---------------- | ------------------------------------------------------------------------- |
+| `index.ts`       | Entry point: provider/model resolution, session creation, InteractiveMode |
+| `convex-sync.ts` | Optional Convex sync via ConvexHttpClient + admin auth                    |

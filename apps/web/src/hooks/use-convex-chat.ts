@@ -1,10 +1,9 @@
 "use client";
 
 import { api } from "@zenthor-ai-assist/backend/convex/_generated/api";
+import type { Id } from "@zenthor-ai-assist/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-import type { Id } from "@zenthor-ai-assist/backend/convex/_generated/dataModel";
 
 export interface ChatMessage {
   id: string;

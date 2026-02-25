@@ -34,9 +34,7 @@ export const list = authQuery({
   handler: async (ctx) => {
     const conversations = await ctx.db
       .query("conversations")
-      .withIndex("by_user_status", (q) =>
-        q.eq("userId", ctx.auth.userId).eq("status", "active"),
-      )
+      .withIndex("by_user_status", (q) => q.eq("userId", ctx.auth.userId).eq("status", "active"))
       .order("desc")
       .collect();
 

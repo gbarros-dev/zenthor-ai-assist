@@ -2,22 +2,22 @@
 
 ## File Map
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `src/index.ts` | 488 | Main orchestrator: state, message loop, agent invocation |
-| `src/channels/whatsapp.ts` | ~400 | Baileys integration: auth, connect, send/receive, group sync |
-| `src/db.ts` | ~500 | SQLite schema, all queries (messages, chats, tasks, sessions, groups) |
-| `src/container-runner.ts` | 646 | Spawn containers, build mounts, streaming output parser |
-| `src/group-queue.ts` | 340 | Per-group FIFO queue, global concurrency (max 5) |
-| `src/ipc.ts` | ~250 | File-based IPC watcher (messages, tasks, groups) |
-| `src/task-scheduler.ts` | ~200 | Cron/interval/once task runner |
-| `src/mount-security.ts` | 419 | Validate mounts against allowlist, block dangerous paths |
-| `src/router.ts` | 45 | Message formatting (XML), output stripping |
-| `src/config.ts` | 69 | All constants: paths, timeouts, polling intervals |
-| `src/types.ts` | 104 | Channel interface, message types, group config |
-| `src/container-runtime.ts` | - | Docker/Apple Container detection and startup |
-| `src/logger.ts` | - | Pino logger setup |
-| `src/whatsapp-auth.ts` | - | Standalone WhatsApp authentication CLI |
+| File                       | Lines | Purpose                                                               |
+| -------------------------- | ----- | --------------------------------------------------------------------- |
+| `src/index.ts`             | 488   | Main orchestrator: state, message loop, agent invocation              |
+| `src/channels/whatsapp.ts` | ~400  | Baileys integration: auth, connect, send/receive, group sync          |
+| `src/db.ts`                | ~500  | SQLite schema, all queries (messages, chats, tasks, sessions, groups) |
+| `src/container-runner.ts`  | 646   | Spawn containers, build mounts, streaming output parser               |
+| `src/group-queue.ts`       | 340   | Per-group FIFO queue, global concurrency (max 5)                      |
+| `src/ipc.ts`               | ~250  | File-based IPC watcher (messages, tasks, groups)                      |
+| `src/task-scheduler.ts`    | ~200  | Cron/interval/once task runner                                        |
+| `src/mount-security.ts`    | 419   | Validate mounts against allowlist, block dangerous paths              |
+| `src/router.ts`            | 45    | Message formatting (XML), output stripping                            |
+| `src/config.ts`            | 69    | All constants: paths, timeouts, polling intervals                     |
+| `src/types.ts`             | 104   | Channel interface, message types, group config                        |
+| `src/container-runtime.ts` | -     | Docker/Apple Container detection and startup                          |
+| `src/logger.ts`            | -     | Pino logger setup                                                     |
+| `src/whatsapp-auth.ts`     | -     | Standalone WhatsApp authentication CLI                                |
 
 ## SQLite Schema
 
@@ -110,17 +110,19 @@ interface Channel {
 
 // Group configuration
 interface RegisteredGroup {
-  name: string;              // "Family Chat"
-  folder: string;            // "family-chat"
-  trigger: string;           // "@Andy"
+  name: string; // "Family Chat"
+  folder: string; // "family-chat"
+  trigger: string; // "@Andy"
   added_at: string;
   containerConfig?: {
-    additionalMounts?: [{
-      hostPath: string;
-      containerPath?: string;
-      readonly?: boolean;
-    }];
-    timeout?: number;        // default: 300000ms
+    additionalMounts?: [
+      {
+        hostPath: string;
+        containerPath?: string;
+        readonly?: boolean;
+      },
+    ];
+    timeout?: number; // default: 300000ms
   };
   requiresTrigger?: boolean; // default: true
 }
@@ -140,14 +142,14 @@ interface ContainerInput {
 ## Configuration Constants (src/config.ts)
 
 ```typescript
-ASSISTANT_NAME = process.env.ASSISTANT_NAME || 'Andy'
-POLL_INTERVAL = 2000                    // Message loop: 2s
-SCHEDULER_POLL_INTERVAL = 60000         // Task scheduler: 60s
-MAX_CONCURRENT_CONTAINERS = 5           // Global concurrency
-IDLE_TIMEOUT = 1800000                  // 30min keep-alive
-CONTAINER_TIMEOUT = 1800000             // 30min hard timeout
-CONTAINER_MAX_OUTPUT_SIZE = 10485760    // 10MB max output
-IPC_POLL_INTERVAL = 1000               // IPC file polling: 1s
+ASSISTANT_NAME = process.env.ASSISTANT_NAME || "Andy";
+POLL_INTERVAL = 2000; // Message loop: 2s
+SCHEDULER_POLL_INTERVAL = 60000; // Task scheduler: 60s
+MAX_CONCURRENT_CONTAINERS = 5; // Global concurrency
+IDLE_TIMEOUT = 1800000; // 30min keep-alive
+CONTAINER_TIMEOUT = 1800000; // 30min hard timeout
+CONTAINER_MAX_OUTPUT_SIZE = 10485760; // 10MB max output
+IPC_POLL_INTERVAL = 1000; // IPC file polling: 1s
 ```
 
 ## Directory Structure
@@ -189,15 +191,18 @@ nanoclaw/
 ## Environment Variables
 
 **Required:**
+
 - `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY`
 
 **Optional:**
+
 - `ASSISTANT_NAME` (default: "Andy")
 - `CONTAINER_TIMEOUT`, `MAX_CONCURRENT_CONTAINERS`, `IDLE_TIMEOUT`
 - `LOG_LEVEL` (default: "info")
 - `TZ` (timezone for cron)
 
 **Channel-specific (added by skills):**
+
 - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ONLY`, `TELEGRAM_BOT_POOL`
 - `DISCORD_BOT_TOKEN`, `DISCORD_ONLY`
 - `OPENAI_API_KEY` (Whisper voice transcription)

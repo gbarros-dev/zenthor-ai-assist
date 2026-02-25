@@ -4,29 +4,29 @@
 
 ### Core Skills
 
-| Skill | Command | Purpose |
-|-------|---------|---------|
-| Setup | `/setup` | First-time installation (11 steps) |
-| Customize | `/customize` | Interactive behavior modification |
-| Debug | `/debug` | Container/auth/IPC troubleshooting |
+| Skill     | Command      | Purpose                            |
+| --------- | ------------ | ---------------------------------- |
+| Setup     | `/setup`     | First-time installation (11 steps) |
+| Customize | `/customize` | Interactive behavior modification  |
+| Debug     | `/debug`     | Container/auth/IPC troubleshooting |
 
 ### Channel Skills
 
-| Skill | Command | Adds | Dependencies |
-|-------|---------|------|-------------|
-| Telegram | `/add-telegram` | `src/channels/telegram.ts` | `grammy` |
-| Discord | `/add-discord` | `src/channels/discord.ts` | `discord.js` |
-| Gmail | `/add-gmail` | Email tool/channel | `@gongrzhe/server-gmail-autoauth-mcp` |
-| Voice | `/add-voice-transcription` | `src/transcription.ts` | `openai` |
+| Skill    | Command                    | Adds                       | Dependencies                          |
+| -------- | -------------------------- | -------------------------- | ------------------------------------- |
+| Telegram | `/add-telegram`            | `src/channels/telegram.ts` | `grammy`                              |
+| Discord  | `/add-discord`             | `src/channels/discord.ts`  | `discord.js`                          |
+| Gmail    | `/add-gmail`               | Email tool/channel         | `@gongrzhe/server-gmail-autoauth-mcp` |
+| Voice    | `/add-voice-transcription` | `src/transcription.ts`     | `openai`                              |
 
 ### Advanced Skills
 
-| Skill | Command | Purpose |
-|-------|---------|---------|
-| Telegram Swarm | `/add-telegram-swarm` | Multi-agent teams via bot pool |
-| Parallel | `/add-parallel` | Parallel Search + Deep Research APIs |
-| X Integration | `/x-integration` | Twitter via Playwright automation |
-| Apple Container | `/convert-to-apple-container` | Docker -> Apple Container runtime |
+| Skill           | Command                       | Purpose                              |
+| --------------- | ----------------------------- | ------------------------------------ |
+| Telegram Swarm  | `/add-telegram-swarm`         | Multi-agent teams via bot pool       |
+| Parallel        | `/add-parallel`               | Parallel Search + Deep Research APIs |
+| X Integration   | `/x-integration`              | Twitter via Playwright automation    |
+| Apple Container | `/convert-to-apple-container` | Docker -> Apple Container runtime    |
 
 ## Skill Details
 
@@ -103,18 +103,18 @@ Located in `skills-engine/`. Provides deterministic code transformation.
 
 ### Key Modules
 
-| Module | Purpose |
-|--------|---------|
-| `apply.ts` | Main orchestrator |
-| `manifest.ts` | Parse SKILL.toml |
-| `merge.ts` | Three-way merge with conflict resolution |
-| `state.ts` | Track applied skills, rollback capability |
+| Module          | Purpose                                           |
+| --------------- | ------------------------------------------------- |
+| `apply.ts`      | Main orchestrator                                 |
+| `manifest.ts`   | Parse SKILL.toml                                  |
+| `merge.ts`      | Three-way merge with conflict resolution          |
+| `state.ts`      | Track applied skills, rollback capability         |
 | `structured.ts` | Structured file merges (env, npm, docker-compose) |
-| `uninstall.ts` | Safe skill removal |
-| `update.ts` | Update skills to newer versions |
-| `rebase.ts` | Rebase on new base code |
-| `replay.ts` | Replay all skills from history |
-| `backup.ts` | Full project backup/restore |
+| `uninstall.ts`  | Safe skill removal                                |
+| `update.ts`     | Update skills to newer versions                   |
+| `rebase.ts`     | Rebase on new base code                           |
+| `replay.ts`     | Replay all skills from history                    |
+| `backup.ts`     | Full project backup/restore                       |
 
 ### Intent Files
 
@@ -124,35 +124,35 @@ When merge conflicts occur, the engine writes intent files explaining what chang
 
 Located in `setup/`:
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Entry point, routes to steps |
-| `platform.ts` | OS detection, Node.js version |
-| `environment.ts` | Existing config check |
-| `container.ts` | Docker/Apple Container setup |
-| `whatsapp-auth.ts` | WhatsApp auth (3 methods) |
-| `groups.ts` | Group listing and sync |
-| `register.ts` | Group registration |
-| `mounts.ts` | Mount allowlist config |
-| `service.ts` | launchd/systemd service creation |
-| `verify.ts` | Full health check |
+| File               | Purpose                          |
+| ------------------ | -------------------------------- |
+| `index.ts`         | Entry point, routes to steps     |
+| `platform.ts`      | OS detection, Node.js version    |
+| `environment.ts`   | Existing config check            |
+| `container.ts`     | Docker/Apple Container setup     |
+| `whatsapp-auth.ts` | WhatsApp auth (3 methods)        |
+| `groups.ts`        | Group listing and sync           |
+| `register.ts`      | Group registration               |
+| `mounts.ts`        | Mount allowlist config           |
+| `service.ts`       | launchd/systemd service creation |
+| `verify.ts`        | Full health check                |
 
 ## CLAUDE.md Memory Files
 
-| Location | Scope | Purpose |
-|----------|-------|---------|
-| `/CLAUDE.md` | Project | Architecture overview for Claude Code |
+| Location                  | Scope      | Purpose                                   |
+| ------------------------- | ---------- | ----------------------------------------- |
+| `/CLAUDE.md`              | Project    | Architecture overview for Claude Code     |
 | `groups/global/CLAUDE.md` | All groups | Global persona, capabilities, constraints |
-| `groups/main/CLAUDE.md` | Admin only | Extended capabilities, project access |
-| `groups/{name}/CLAUDE.md` | Per group | Custom behavior for that group |
+| `groups/main/CLAUDE.md`   | Admin only | Extended capabilities, project access     |
+| `groups/{name}/CLAUDE.md` | Per group  | Custom behavior for that group            |
 
 ## Tests
 
-| File | Coverage |
-|------|----------|
-| `src/channels/whatsapp.test.ts` | WhatsApp behavior, voice transcription |
-| `setup/platform.test.ts` | OS detection |
-| `setup/register.test.ts` | Group registration |
-| `setup/service.test.ts` | Service file generation |
-| `setup/environment.test.ts` | Runtime detection |
+| File                                | Coverage                                      |
+| ----------------------------------- | --------------------------------------------- |
+| `src/channels/whatsapp.test.ts`     | WhatsApp behavior, voice transcription        |
+| `setup/platform.test.ts`            | OS detection                                  |
+| `setup/register.test.ts`            | Group registration                            |
+| `setup/service.test.ts`             | Service file generation                       |
+| `setup/environment.test.ts`         | Runtime detection                             |
 | `skills-engine/__tests__/*.test.ts` | Apply, merge, manifest, state, rebase, replay |

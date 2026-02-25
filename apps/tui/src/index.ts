@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
+import type { Message } from "@mariozechner/pi-ai";
 import {
   AuthStorage,
   createAgentSession,
@@ -9,7 +10,6 @@ import {
   ModelRegistry,
   SettingsManager,
 } from "@mariozechner/pi-coding-agent";
-import type { Message } from "@mariozechner/pi-ai";
 
 import { createConvexSync } from "./convex-sync.js";
 
@@ -57,8 +57,7 @@ const ALLOWED_AI_PROVIDERS: ReadonlyArray<AiProvider> = [
 ] as const;
 
 function resolveAnthropicCredential(): string | undefined {
-  const oauth =
-    process.env.ANTHROPIC_OAUTH_TOKEN ?? process.env.CLAUDE_CODE_OAUTH_TOKEN;
+  const oauth = process.env.ANTHROPIC_OAUTH_TOKEN ?? process.env.CLAUDE_CODE_OAUTH_TOKEN;
   if (oauth) return oauth;
 
   return process.env.ANTHROPIC_API_KEY?.trim();
@@ -85,9 +84,10 @@ function resolveStartupInfoMode(settingsManager: SettingsManager): StartupInfoMo
 
 function resolveOpenAiCodexCredential(): string | undefined {
   const codexHome = process.env.CODEX_HOME?.trim() ?? join(homedir(), ".codex");
-  const normalizedCodexHome = codexHome === "~" || codexHome.startsWith("~/")
-    ? join(homedir(), codexHome.replace(/^~\//, ""))
-    : codexHome;
+  const normalizedCodexHome =
+    codexHome === "~" || codexHome.startsWith("~/")
+      ? join(homedir(), codexHome.replace(/^~\//, ""))
+      : codexHome;
   const candidateAuthFiles = [join(normalizedCodexHome, "auth.json")];
 
   for (const filePath of candidateAuthFiles) {
@@ -132,9 +132,7 @@ function normalizeProvider(raw: string | undefined): AiProvider | undefined {
 
 function resolveProviderSelectionWithSource(): ProviderSelection {
   const rawProvider =
-    process.env.ZENTHOR_AI_PROVIDER ??
-    process.env.TUI_PROVIDER ??
-    process.env.AI_PROVIDER;
+    process.env.ZENTHOR_AI_PROVIDER ?? process.env.TUI_PROVIDER ?? process.env.AI_PROVIDER;
   const configuredProvider = normalizeProvider(rawProvider);
   if (configuredProvider) {
     return { provider: configuredProvider, source: "explicit" };
@@ -178,9 +176,7 @@ function resolveProviderCredential(provider: AiProvider): string {
   if (provider === "anthropic") {
     const credential = resolveAnthropicCredential();
     if (credential) return credential;
-    throw new Error(
-      "Set ANTHROPIC_API_KEY, ANTHROPIC_OAUTH_TOKEN, or CLAUDE_CODE_OAUTH_TOKEN",
-    );
+    throw new Error("Set ANTHROPIC_API_KEY, ANTHROPIC_OAUTH_TOKEN, or CLAUDE_CODE_OAUTH_TOKEN");
   }
 
   if (provider === "openai-codex") {
@@ -244,10 +240,7 @@ async function resolveModel({
   if (requestedModel) {
     const parsedRequested = parseModelRef(requestedModel);
     if (parsedRequested) {
-      const requested = modelRegistry.find(
-        parsedRequested.provider,
-        parsedRequested.modelId,
-      );
+      const requested = modelRegistry.find(parsedRequested.provider, parsedRequested.modelId);
       if (requested && (await modelRegistry.getApiKey(requested))) {
         return {
           model: requested,
@@ -309,7 +302,8 @@ async function main(): Promise<void> {
   const authStorage = AuthStorage.create(join(AGENT_DIR, "auth.json"));
   authStorage.setRuntimeApiKey(provider, credential);
   const settingsManager = SettingsManager.create(process.cwd(), AGENT_DIR);
-  const requestedQuietStartup = parseBooleanEnv(process.env.ZENTHOR_AI_QUIET_STARTUP) ??
+  const requestedQuietStartup =
+    parseBooleanEnv(process.env.ZENTHOR_AI_QUIET_STARTUP) ??
     parseBooleanEnv(process.env.ZENTHOR_AI_COMPACT_STARTUP);
   if (requestedQuietStartup !== undefined) {
     settingsManager.setQuietStartup(requestedQuietStartup);
@@ -378,16 +372,9 @@ async function main(): Promise<void> {
           if (!text) continue;
 
           const modelUsed =
-            msg.role === "assistant"
-              ? (msg as { model?: string }).model
-              : undefined;
+            msg.role === "assistant" ? (msg as { model?: string }).model : undefined;
 
-          sync.syncMessage(
-            msg.role,
-            text,
-            modelUsed,
-            msg.timestamp,
-          );
+          sync.syncMessage(msg.role, text, modelUsed, msg.timestamp);
         }
       }
     });

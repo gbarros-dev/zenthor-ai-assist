@@ -57,9 +57,7 @@ export const list = authQuery({
     const limit = args.limit ?? 200;
     return await ctx.db
       .query("messages")
-      .withIndex("by_conversation_created", (q) =>
-        q.eq("conversationId", args.conversationId),
-      )
+      .withIndex("by_conversation_created", (q) => q.eq("conversationId", args.conversationId))
       .order("asc")
       .take(limit);
   },

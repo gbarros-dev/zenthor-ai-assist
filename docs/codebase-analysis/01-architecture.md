@@ -132,25 +132,25 @@ Every 60 seconds:
 
 ## Key Design Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| **Single process** | No microservices, message queues, or orchestration overhead |
-| **Container isolation** | OS-level security, not application-level permissions |
-| **File-based IPC** | Simple, reliable, no external deps. Files in /workspace/ipc/ |
+| Decision                 | Rationale                                                     |
+| ------------------------ | ------------------------------------------------------------- |
+| **Single process**       | No microservices, message queues, or orchestration overhead   |
+| **Container isolation**  | OS-level security, not application-level permissions          |
+| **File-based IPC**       | Simple, reliable, no external deps. Files in /workspace/ipc/  |
 | **Polling (not events)** | 2s poll loop is simple, crash-recoverable, no missed messages |
-| **SQLite** | Single-file DB, no server, crash-safe, built into Node.js |
-| **Skills over plugins** | Code modifications you own, not runtime plugin registry |
-| **Per-group sessions** | Conversation continuity, memory isolation |
-| **XML message format** | Structured but readable, easy for LLM to parse |
+| **SQLite**               | Single-file DB, no server, crash-safe, built into Node.js     |
+| **Skills over plugins**  | Code modifications you own, not runtime plugin registry       |
+| **Per-group sessions**   | Conversation continuity, memory isolation                     |
+| **XML message format**   | Structured but readable, easy for LLM to parse                |
 
 ## Security Model
 
-| Entity | Trust Level | Why |
-|--------|-------------|-----|
-| Main group | Trusted | Private self-chat, admin control |
-| Non-main groups | Untrusted | Other users could be malicious |
-| Containers | Sandboxed | Filesystem & process isolation |
-| WhatsApp input | Untrusted | Potential prompt injection |
+| Entity          | Trust Level | Why                              |
+| --------------- | ----------- | -------------------------------- |
+| Main group      | Trusted     | Private self-chat, admin control |
+| Non-main groups | Untrusted   | Other users could be malicious   |
+| Containers      | Sandboxed   | Filesystem & process isolation   |
+| WhatsApp input  | Untrusted   | Potential prompt injection       |
 
 ### Isolation Layers
 

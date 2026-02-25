@@ -1,12 +1,7 @@
 import { hostname } from "os";
 
 import { Agent } from "@mariozechner/pi-agent-core";
-import {
-  getModels,
-  type AssistantMessage,
-  type Message,
-  type Usage,
-} from "@mariozechner/pi-ai";
+import { getModels, type AssistantMessage, type Message, type Usage } from "@mariozechner/pi-ai";
 import { ConvexHttpClient } from "convex/browser";
 
 const SYSTEM_PROMPT = `You are Zenthor, a helpful personal AI assistant. You help with organizing thoughts, managing notes, answering questions, and having productive conversations.
@@ -62,8 +57,7 @@ function optionalIntEnv(name: string, fallback: number): number {
 }
 
 function resolveAnthropicCredential(): string {
-  const oauthToken =
-    process.env.ANTHROPIC_OAUTH_TOKEN ?? process.env.CLAUDE_CODE_OAUTH_TOKEN;
+  const oauthToken = process.env.ANTHROPIC_OAUTH_TOKEN ?? process.env.CLAUDE_CODE_OAUTH_TOKEN;
   if (oauthToken) {
     return oauthToken;
   }
@@ -80,22 +74,13 @@ function resolveAnthropicCredential(): string {
 
 function readConfig(): WorkerConfig {
   const convexUrl =
-    process.env.CONVEX_URL ??
-    process.env.NEXT_PUBLIC_CONVEX_URL ??
-    requiredEnv("CONVEX_URL");
+    process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL ?? requiredEnv("CONVEX_URL");
   const convexAdminKey = requiredEnv("CONVEX_ADMIN_KEY");
   const anthropicCredential = resolveAnthropicCredential();
   const anthropicModel = process.env.ANTHROPIC_MODEL;
-  const pollIntervalMs = optionalIntEnv(
-    "AGENT_WORKER_POLL_INTERVAL_MS",
-    DEFAULT_POLL_INTERVAL_MS,
-  );
-  const contextLimit = optionalIntEnv(
-    "AGENT_WORKER_CONTEXT_LIMIT",
-    DEFAULT_CONTEXT_LIMIT,
-  );
-  const workerId =
-    process.env.AGENT_WORKER_ID ?? `${hostname()}-${process.pid}`;
+  const pollIntervalMs = optionalIntEnv("AGENT_WORKER_POLL_INTERVAL_MS", DEFAULT_POLL_INTERVAL_MS);
+  const contextLimit = optionalIntEnv("AGENT_WORKER_CONTEXT_LIMIT", DEFAULT_CONTEXT_LIMIT);
+  const workerId = process.env.AGENT_WORKER_ID ?? `${hostname()}-${process.pid}`;
 
   return {
     convexUrl,
@@ -125,10 +110,7 @@ function createEmptyUsage(): Usage {
   };
 }
 
-function toPiMessage(
-  message: WorkerConversationMessage,
-  fallbackModelId: string,
-): Message {
+function toPiMessage(message: WorkerConversationMessage, fallbackModelId: string): Message {
   if (message.role === "user") {
     return {
       role: "user",
@@ -204,10 +186,9 @@ async function runMutation<T>(
   functionName: string,
   args: Record<string, unknown>,
 ): Promise<T> {
-  return (await (client as { mutation: (name: string, params: unknown) => Promise<unknown> }).mutation(
-    functionName,
-    args,
-  )) as T;
+  return (await (
+    client as { mutation: (name: string, params: unknown) => Promise<unknown> }
+  ).mutation(functionName, args)) as T;
 }
 
 async function processClaimedJob(
@@ -229,8 +210,7 @@ async function processClaimedJob(
       model,
       messages: piMessages,
     },
-    getApiKey: (provider) =>
-      provider === "anthropic" ? config.anthropicCredential : undefined,
+    getApiKey: (provider) => (provider === "anthropic" ? config.anthropicCredential : undefined),
   });
 
   let streamedText = "";
@@ -244,24 +224,18 @@ async function processClaimedJob(
 
     updateQueue = updateQueue
       .then(async () => {
-        const updated = await runMutation<boolean>(
-          client,
-          "agentWorker:updateStreamingContent",
-          {
-            jobId: job.jobId,
-            assistantMessageId: job.assistantMessageId,
-            content,
-          },
-        );
+        const updated = await runMutation<boolean>(client, "agentWorker:updateStreamingContent", {
+          jobId: job.jobId,
+          assistantMessageId: job.assistantMessageId,
+          content,
+        });
         if (!updated) {
           throw new Error("Streaming update rejected by Convex");
         }
       })
       .catch((error: unknown) => {
         streamUpdateError =
-          error instanceof Error
-            ? error
-            : new Error(`Streaming update failed: ${String(error)}`);
+          error instanceof Error ? error : new Error(`Streaming update failed: ${String(error)}`);
       });
   };
 
@@ -274,10 +248,7 @@ async function processClaimedJob(
     const charsSinceUpdate = streamedText.length - lastPersistedText.length;
     const timeSinceUpdate = now - lastUpdateTime;
 
-    if (
-      charsSinceUpdate >= STREAM_UPDATE_CHARS ||
-      timeSinceUpdate >= STREAM_UPDATE_INTERVAL_MS
-    ) {
+    if (charsSinceUpdate >= STREAM_UPDATE_CHARS || timeSinceUpdate >= STREAM_UPDATE_INTERVAL_MS) {
       queueStreamingUpdate(streamedText);
       lastPersistedText = streamedText;
       lastUpdateTime = now;
@@ -325,21 +296,15 @@ async function runWorker(config: WorkerConfig): Promise<void> {
     stopRequested = true;
   });
 
-  console.log(
-    `[worker] started id=${config.workerId} poll=${config.pollIntervalMs}ms`,
-  );
+  console.log(`[worker] started id=${config.workerId} poll=${config.pollIntervalMs}ms`);
 
   while (!stopRequested) {
     let claimedJob: ClaimedJob | null = null;
     try {
-      claimedJob = await runMutation<ClaimedJob | null>(
-        client,
-        "agentWorker:claimNextPendingJob",
-        {
-          workerId: config.workerId,
-          contextLimit: config.contextLimit,
-        },
-      );
+      claimedJob = await runMutation<ClaimedJob | null>(client, "agentWorker:claimNextPendingJob", {
+        workerId: config.workerId,
+        contextLimit: config.contextLimit,
+      });
     } catch (error) {
       console.error("[worker] failed to claim job:", error);
       await sleep(config.pollIntervalMs);
@@ -355,8 +320,7 @@ async function runWorker(config: WorkerConfig): Promise<void> {
       await processClaimedJob(client, config, claimedJob);
       console.log(`[worker] completed job ${claimedJob.jobId}`);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`[worker] failed job ${claimedJob.jobId}:`, error);
 
       try {

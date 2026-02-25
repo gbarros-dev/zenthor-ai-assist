@@ -19,11 +19,13 @@ We are implementing **option 2** from this plan:
 ## Current State (Important Baseline)
 
 ### Loop and persistence are split
+
 - `apps/ai-agent/src/index.ts` runs a polling loop and orchestrates agent execution.
 - `apps/ai-agent/src/db.ts` stores chats/messages/sessions/groups/tasks in SQLite.
 - `apps/backend/convex/agent.ts` already has a separate Convex queue-based loop for web chat, but uses direct Anthropic SDK calls (not pi-agent-core).
 
 ### Existing Convex pieces we can reuse
+
 - `conversations`, `messages`, `agentQueue` tables already exist.
 - `messages.send` enqueues `agentQueue` jobs for worker pickup.
 - web UI is already wired to Convex (`useConvexChat`).
@@ -33,12 +35,14 @@ This means the shortest path is: replace Convex `agent.processJob` internals fir
 ## What "pi-mono as main loop" means here
 
 Use `@mariozechner/pi-agent-core` as the orchestration engine for each queued job:
+
 - context assembly,
 - model streaming,
 - tool execution,
 - event-driven state updates.
 
 Convex remains responsible for:
+
 - durable queue state,
 - durable message state,
 - idempotent retries,
@@ -91,6 +95,7 @@ bun run --cwd apps/agent-worker dev
 ```
 
 Required env vars:
+
 - `CONVEX_URL` (or `NEXT_PUBLIC_CONVEX_URL`)
 - `CONVEX_DEPLOY_KEY`
 - One Anthropic credential:
@@ -102,6 +107,7 @@ Required env vars:
 ## Phase 1: Make pi-agent-core the external worker loop (Web first)
 
 ### Changes
+
 - Add backend deps:
   - `@mariozechner/pi-agent-core`
   - `@mariozechner/pi-ai`
@@ -114,6 +120,7 @@ Required env vars:
   - stream deltas back to Convex and finalize/fail jobs.
 
 ### Behavior rules
+
 - Claim job idempotently (`pending -> processing` only once).
 - Always create assistant placeholder before streaming.
 - On completion:
@@ -124,6 +131,7 @@ Required env vars:
   - mark queue row `failed` with error message.
 
 ### Why phase this way
+
 - No channel migration required.
 - web chat keeps working while execution moves out of Convex runtime.
 
@@ -132,6 +140,7 @@ Required env vars:
 Current schema is web-oriented; add channel bridge tables so WhatsApp can use Convex as primary persistence.
 
 ### New/updated tables (proposed)
+
 - `channelChats`
   - `channel` (`"whatsapp" | "web" | ...`)
   - `externalChatId` (jid for WhatsApp)
@@ -148,11 +157,13 @@ Current schema is web-oriented; add channel bridge tables so WhatsApp can use Co
   - durable outgoing messages for adapters (status: pending/sent/failed)
 
 ### Keep/reuse
+
 - keep `conversations`, `messages`, `agentQueue`.
 
 ## Phase 3: Replace SQLite ingest loop with Convex ingest mutations
 
 ### New backend functions
+
 - Internal mutation `channel.ingestMessage` (authorized by secret/signature)
   - idempotent insert using `channelMessages` dedupe key.
   - upsert/find `conversationId` by `channel + externalChatId`.
@@ -165,6 +176,7 @@ Current schema is web-oriented; add channel bridge tables so WhatsApp can use Co
   - adapter ACKs delivery/failure.
 
 ### ai-agent app changes
+
 - `apps/ai-agent` keeps only channel adapter responsibilities:
   - receive WhatsApp events,
   - call Convex `channel.ingestMessage`,

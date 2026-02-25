@@ -21,10 +21,7 @@ export class ConvexSync {
   }
 
   async init(): Promise<void> {
-    this.conversationId = await this.mutation(
-      "tuiSync:getOrCreateConversation",
-      {},
-    );
+    this.conversationId = await this.mutation("tuiSync:getOrCreateConversation", {});
   }
 
   async syncMessage(
@@ -52,15 +49,10 @@ export class ConvexSync {
     }
   }
 
-  private async mutation<T>(
-    name: string,
-    args: Record<string, unknown>,
-  ): Promise<T> {
-    return (
-      await (
-        this.client as { mutation: (name: string, args: unknown) => Promise<unknown> }
-      ).mutation(name, args)
-    ) as T;
+  private async mutation<T>(name: string, args: Record<string, unknown>): Promise<T> {
+    return (await (
+      this.client as { mutation: (name: string, args: unknown) => Promise<unknown> }
+    ).mutation(name, args)) as T;
   }
 }
 
@@ -69,8 +61,7 @@ export class ConvexSync {
  * Returns null if either is missing — TUI works fine without Convex.
  */
 export function createConvexSync(): ConvexSync | null {
-  const convexUrl =
-    process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL;
+  const convexUrl = process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL;
   const adminKey = process.env.CONVEX_ADMIN_KEY;
 
   if (!convexUrl || !adminKey) {

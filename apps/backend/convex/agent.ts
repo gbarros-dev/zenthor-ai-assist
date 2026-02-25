@@ -1,12 +1,7 @@
 "use node";
 
 import { Agent } from "@mariozechner/pi-agent-core";
-import {
-  getModels,
-  type AssistantMessage,
-  type Message,
-  type Usage,
-} from "@mariozechner/pi-ai";
+import { getModels, type AssistantMessage, type Message, type Usage } from "@mariozechner/pi-ai";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
@@ -49,10 +44,7 @@ function createEmptyUsage(): Usage {
   };
 }
 
-function toPiMessage(
-  message: PersistedConversationMessage,
-  fallbackModelId: string,
-): Message {
+function toPiMessage(message: PersistedConversationMessage, fallbackModelId: string): Message {
   if (message.role === "user") {
     return {
       role: "user",
@@ -109,9 +101,7 @@ function resolveAnthropicModel(configuredModelId?: string) {
     );
   }
 
-  return (
-    availableModels.find((m) => m.id === DEFAULT_MODEL) ?? availableModels[0]
-  );
+  return availableModels.find((m) => m.id === DEFAULT_MODEL) ?? availableModels[0];
 }
 
 export const processJob = internalAction({
@@ -124,12 +114,9 @@ export const processJob = internalAction({
       return;
     }
 
-    const claimed = await ctx.runMutation(
-      internal.agentInternal.claimJobIfPending,
-      {
-        jobId: args.jobId,
-      },
-    );
+    const claimed = await ctx.runMutation(internal.agentInternal.claimJobIfPending, {
+      jobId: args.jobId,
+    });
     if (!claimed) {
       // Already claimed or completed by another worker invocation.
       return;
@@ -137,18 +124,14 @@ export const processJob = internalAction({
 
     let assistantMessageId: Id<"messages"> | undefined;
     try {
-      const messages = (await ctx.runQuery(
-        internal.agentInternal.getConversationMessages,
-        {
-          conversationId: job.conversationId,
-          limit: MAX_CONTEXT_MESSAGES,
-        },
-      )) as PersistedConversationMessage[];
+      const messages = (await ctx.runQuery(internal.agentInternal.getConversationMessages, {
+        conversationId: job.conversationId,
+        limit: MAX_CONTEXT_MESSAGES,
+      })) as PersistedConversationMessage[];
 
-      assistantMessageId = await ctx.runMutation(
-        internal.messages.createAssistantPlaceholder,
-        { conversationId: job.conversationId },
-      );
+      assistantMessageId = await ctx.runMutation(internal.messages.createAssistantPlaceholder, {
+        conversationId: job.conversationId,
+      });
       const currentAssistantMessageId = assistantMessageId;
 
       const apiKey = process.env.ANTHROPIC_API_KEY;

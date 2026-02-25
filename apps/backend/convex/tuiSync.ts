@@ -13,12 +13,7 @@ export const getOrCreateConversation = internalMutation({
     // Find existing active TUI conversation
     const existing = await ctx.db
       .query("conversations")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("channel"), "tui"),
-          q.eq(q.field("status"), "active"),
-        ),
-      )
+      .filter((q) => q.and(q.eq(q.field("channel"), "tui"), q.eq(q.field("status"), "active")))
       .first();
 
     if (existing) return existing._id;
