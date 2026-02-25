@@ -73,10 +73,12 @@ Messages and task operations are verified against group identity:
 **Credential Filtering:**
 Only these environment variables are exposed to containers:
 ```typescript
-const allowedVars = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY'];
+const allowedVars = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY'];
 ```
 
-> **Note:** Anthropic credentials are mounted so that Claude Code can authenticate when the agent runs. However, this means the agent itself can discover these credentials via Bash or file operations. Ideally, Claude Code would authenticate without exposing credentials to the agent's execution environment, but I couldn't figure this out. **PRs welcome** if you have ideas for credential isolation.
+> **Note:** Anthropic credentials are mounted so that Claude Code can authenticate when the agent runs. Both OAuth forms are supported (`ANTHROPIC_OAUTH_TOKEN` and `CLAUDE_CODE_OAUTH_TOKEN`) and neither should be treated as legacy.
+>
+> OpenAI subscription credentials are loaded from the Codex auth file instead: `~/.codex/auth.json` (or `${CODEX_HOME}/auth.json`), so they are not part of `.env` extraction.
 
 ## Privilege Comparison
 
