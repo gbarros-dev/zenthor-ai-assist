@@ -9,9 +9,11 @@ import {
   InteractiveMode,
   ModelRegistry,
   SettingsManager,
+  type ToolDefinition,
 } from "@mariozechner/pi-coding-agent";
 
 import { createConvexSync } from "./convex-sync.js";
+import { webFetchTool, webSearchTool } from "./tools/index.js";
 
 const AGENT_DIR = join(homedir(), ".zenthor");
 
@@ -343,6 +345,7 @@ async function main(): Promise<void> {
     modelRegistry,
     model: initialModel,
     settingsManager,
+    customTools: [webFetchTool, webSearchTool] as unknown as ToolDefinition[],
   });
 
   // ── Convex sync (optional) ───────────────────────────────────────────

@@ -12,7 +12,10 @@
   },
   "dependencies": {
     "@mariozechner/pi-coding-agent": "^0.55.0",
-    "convex": "catalog:"
+    "@mozilla/readability": "^0.6.0",
+    "@sinclair/typebox": "^0.34.48",
+    "convex": "catalog:",
+    "linkedom": "^0.18.12"
   },
   "devDependencies": {
     "@types/node": "catalog:",
