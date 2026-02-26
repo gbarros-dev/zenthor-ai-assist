@@ -1,6 +1,6 @@
 # Zenthor AI Assist — Implementation Plan
 
-Personal AI assistant built on NanoClaw. Accessible via WhatsApp (and optionally Telegram/Discord).
+Personal AI assistant built on Zenthor. Accessible via WhatsApp (and optionally Telegram/Discord).
 
 ## Product Focus
 
@@ -8,7 +8,7 @@ Personal AI assistant built on NanoClaw. Accessible via WhatsApp (and optionally
 2. **Reminders via Todoist** — Create, manage, and track tasks/reminders
 3. **Work Management via Linear** — Manage issues, track priorities (optional)
 
-## What NanoClaw Already Provides
+## What Zenthor Already Provides
 
 - WhatsApp messaging (built-in)
 - Telegram/Discord (available via skills)
@@ -93,7 +93,7 @@ Each note also saved as markdown in `groups/{group}/notes/{slug}.md` for human r
 
 ### Proactive Reminders
 
-Use NanoClaw's scheduled tasks to create a daily check that queries Todoist for due items and sends reminders via `send_message`.
+Use Zenthor's scheduled tasks to create a daily check that queries Todoist for due items and sends reminders via `send_message`.
 
 ### Files to modify/create
 

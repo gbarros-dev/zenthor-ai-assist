@@ -2,7 +2,7 @@
 
 ## Overview
 
-NanoClaw runs Claude agents inside isolated Linux containers (Docker or Apple Container on macOS). The host process spawns containers on demand, communicates via stdin/stdout + file-based IPC, and enforces security through mount restrictions.
+Zenthor runs Claude agents inside isolated Linux containers (Docker or Apple Container on macOS). The host process spawns containers on demand, communicates via stdin/stdout + file-based IPC, and enforces security through mount restrictions.
 
 ## Container Image
 
@@ -49,9 +49,9 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 ### Output Protocol (stdout markers)
 
 ```
----NANOCLAW_OUTPUT_START---
+---ZENTHOR_OUTPUT_START---
 {"status":"success","result":"...","newSessionId":"..."}
----NANOCLAW_OUTPUT_END---
+---ZENTHOR_OUTPUT_END---
 ```
 
 Multiple outputs possible. Host parser extracts JSON between markers.
@@ -78,7 +78,7 @@ query({
   sessionId: id,
   resumeSession: true,
   settingSources: ["project"], // Auto-loads CLAUDE.md files
-  mcpServers: { nanoclaw: customMcpServer },
+  mcpServers: { zenthor: customMcpServer },
   hooks: {
     PreToolUse: sanitizeBash, // Strip credentials from env
     PreCompact: archiveTranscript, // Save transcript before compaction
@@ -158,7 +158,7 @@ Host IPC watcher polls every 1 second, processes files, then deletes them.
 
 ## Mount Security
 
-**Allowlist location:** `~/.config/nanoclaw/mount-allowlist.json` (never mounted into containers)
+**Allowlist location:** `~/.config/zenthor/mount-allowlist.json` (never mounted into containers)
 
 ```json
 {

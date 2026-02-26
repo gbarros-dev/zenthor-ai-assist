@@ -85,7 +85,7 @@ Entrypoint: compile TypeScript, run index.ts
   -> query() with Claude Agent SDK:
      - initialMessage, sessionId, resumeSession
      - settingSources: ['project'] (loads CLAUDE.md)
-     - mcpServers: { nanoclaw: custom MCP }
+     - mcpServers: { zenthor: custom MCP }
      - hooks: PreToolUse (sanitize bash), PreCompact (archive)
   -> Stream results via OUTPUT_START/END markers
   -> Poll /workspace/ipc/input/ for follow-up messages
@@ -95,9 +95,9 @@ Entrypoint: compile TypeScript, run index.ts
 
 ```
 Container stdout:
-  ---NANOCLAW_OUTPUT_START---
+  ---ZENTHOR_OUTPUT_START---
   {"status":"success","result":"...","newSessionId":"..."}
-  ---NANOCLAW_OUTPUT_END---
+  ---ZENTHOR_OUTPUT_END---
 
 Host parser:
   -> Extract JSON from markers
@@ -155,7 +155,7 @@ Every 60 seconds:
 ### Isolation Layers
 
 1. **Container** - Linux VM, only mounted paths visible, non-root user (uid 1000)
-2. **Mount allowlist** - External file at `~/.config/nanoclaw/mount-allowlist.json`, never mounted into containers
+2. **Mount allowlist** - External file at `~/.config/zenthor/mount-allowlist.json`, never mounted into containers
 3. **Session isolation** - Each group at `data/sessions/{group}/.claude/`, can't see others
 4. **IPC authorization** - Main can send to any group, non-main only to own group
 5. **Credential handling** - Passed via stdin, bash hook strips env vars from subprocesses

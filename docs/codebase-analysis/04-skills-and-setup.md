@@ -92,7 +92,7 @@ Located in `skills-engine/`. Provides deterministic code transformation.
 
 ### How Skills Are Applied
 
-1. Initialize `.nanoclaw/` directory and `state.yaml`
+1. Initialize `.zenthor/` directory and `state.yaml`
 2. Read and validate skill manifest (`SKILL.toml`)
 3. Backup current project state
 4. Execute file operations (copy, create, delete)

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Zenthor AI Assist
 
-Personal AI assistant for notes, reminders, and work management. Built on NanoClaw.
+Personal AI assistant for notes, reminders, and work management. Built on Zenthor.
 
 ## Rules
 

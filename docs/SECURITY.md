@@ -1,4 +1,4 @@
-# NanoClaw Security Model
+# Zenthor Security Model
 
 ## Trust Model
 
@@ -24,7 +24,7 @@ This is the primary security boundary. Rather than relying on application-level 
 
 ### 2. Mount Security
 
-**External Allowlist** - Mount permissions stored at `~/.config/nanoclaw/mount-allowlist.json`, which is:
+**External Allowlist** - Mount permissions stored at `~/.config/zenthor/mount-allowlist.json`, which is:
 
 - Outside project root
 - Never mounted into containers

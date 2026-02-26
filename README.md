@@ -1,189 +1,221 @@
-<p align="center">
-  <img src="assets/nanoclaw-logo.png" alt="NanoClaw" width="400">
-</p>
+# Zenthor AI Assist
 
-<p align="center">
-  My personal Claude assistant that runs securely in containers. Lightweight and built to be understood and customized for your own needs.
-</p>
+Zenthor AI Assist is a monorepo that combines a web app, a Convex backend, a background agent worker, and an optional terminal client (TUI).
 
-<p align="center">
-  <a href="https://nanoclaw.dev">nanoclaw.dev</a>&nbsp; • &nbsp;
-  <a href="README_zh.md">中文</a>&nbsp; • &nbsp;
-  <a href="https://discord.gg/VDdww8qS42"><img src="https://img.shields.io/discord/1470188214710046894?label=Discord&logo=discord&v=2" alt="Discord" valign="middle"></a>&nbsp; • &nbsp;
-  <a href="repo-tokens"><img src="repo-tokens/badge.svg" alt="34.9k tokens, 17% of context window" valign="middle"></a>
-</p>
+The current implementation is centered on a message queue workflow:
 
-**New:** First AI assistant to support [Agent Swarms](https://code.claude.com/docs/en/agent-teams). Spin up teams of agents that collaborate in your chat.
+- web and TUI clients create user messages
+- messages are enqueued in `agentQueue`
+- a dedicated worker claims jobs and generates assistant responses
+- responses are streamed back into the shared data model
 
-## Why I Built This
+## Repository layout
 
-[OpenClaw](https://github.com/openclaw/openclaw) is an impressive project with a great vision. But I can't sleep well running software I don't understand with access to my life. OpenClaw has 52+ modules, 8 config management files, 45+ dependencies, and abstractions for 15 channel providers. Security is application-level (allowlists, pairing codes) rather than OS isolation. Everything runs in one Node process with shared memory.
+- `apps/web` – Next.js 16 frontend (React/Clerk/Convex)
+- `apps/backend` – Convex backend (schemas, auth, queries/mutations/actions, queue internals)
+- `apps/agent-worker` – Standalone worker process that drains the queue
+- `apps/tui` – Interactive terminal client with optional Convex sync
+- `packages/tools` – Shared AI tools (web search/fetch, todoist, memory)
+- `packages/config`, `packages/env`, `packages/observability` – shared infra and utility packages
 
-NanoClaw gives you the same core functionality in a codebase you can understand in 8 minutes. One process. A handful of files. Agents run in actual Linux containers with filesystem isolation, not behind permission checks.
+## Architecture at a glance
 
-## Quick Start
+```text
+User (Web UI / TUI)
+      |
+      v
+ Convex API (apps/backend)
+      |
+      v
+  messages -> agentQueue
+      |
+      v
+Agent Worker (apps/agent-worker)
+      |
+      v
+  Streaming updates + completion
+      |
+      v
+  Convex messages table -> UI updates
+```
+
+## Contributor checklist
+
+1. Make architecture-aware edits inside the owning app/package.
+2. Add or update `README` docs when behavior changes.
+3. Prefer small, typed, testable changes over broad refactors.
+4. Run at least `bun run static-analysis` before handing off.
+5. Keep keys and model/provider settings in environment files, never hard-coded.
+6. Preserve existing queue semantics when changing worker behavior.
+
+## What the system does today
+
+1. Authenticated users interact via web UI (`apps/web`).
+2. A message is saved in `messages` and a job is enqueued in `agentQueue`.
+3. The worker (`apps/agent-worker`) polls Convex and claims the oldest pending job.
+4. Worker builds conversation context and streams model output into the assistant message.
+5. Final output is persisted and the job marked `completed`.
+
+The app also supports Clerk-backed identity and note/conversation storage in Convex.
+
+## Core components and contracts
+
+### `apps/backend`
+
+- Convex functions for chat messages and queue operations.
+- Queue-oriented API in `convex/agentWorker.ts` and related internal helpers:
+  - `claimNextPendingJob`
+  - `updateStreamingContent`
+  - `completeJob`
+  - `failJob`
+  - `getQueueHealth`
+- Message flow API for users lives in Convex mutations/queries.
+- Clerk JWT config and webhook handling are wired in Convex auth helpers.
+
+### `apps/agent-worker`
+
+- Polls Convex with `agentWorker:claimNextPendingJob`.
+- Loads conversation context and runs the LLM agent with custom tools:
+  - `webFetchTool`
+  - `webSearchTool`
+  - `todoistTool`
+  - `memoryTool`
+- Persists partial tokens in bounded streaming intervals.
+- Handles retries and marks jobs failed only after retry budget is exhausted.
+
+### `apps/tui`
+
+- Local interactive terminal agent with provider/model auto-selection.
+- Can mirror messages into Convex when `CONVEX_URL` + `CONVEX_ADMIN_KEY` are configured.
+- Uses the same tooling as the worker for consistency.
+
+### `apps/web`
+
+- Next.js app with Clerk authentication and Convex client.
+- Chat and notes UI call shared Convex-generated API bindings from `@zenthor-ai-assist/backend`.
+
+## Reliability behavior (current implementation)
+
+The queue worker now includes resilience fixes for production stability:
+
+- Stale processing recovery:
+  - Jobs stuck in `processing` for over 5 minutes are automatically recovered to `pending`.
+- Retry policy:
+  - Each claim increments `attempts`.
+  - Default max attempts is **3** (`AGENT_WORKER_MAX_ATTEMPTS`).
+  - Failing jobs are reset to `pending` while attempts remain.
+  - After max attempts, job is marked failed and assistant placeholder is set to failed state.
+- Context ordering fix:
+  - Conversation context is fetched newest-first with `order("desc")`, limited, then reversed so agent receives correct chronological order.
+- Streaming persistence:
+  - Writes are batched by either size or time (200 chars or ~500ms) to avoid excessive writes while still staying responsive.
+
+## Environment variables
+
+Create env files in each app as needed.
+
+General:
+
+- `CONVEX_URL`
+- `NEXT_PUBLIC_CONVEX_URL` (web client)
+- `CONVEX_ADMIN_KEY` (canonical)
+- `CONVEX_DEPLOY_KEY` (legacy alias, still accepted with deprecation warning)
+
+Backend (`apps/backend`):
+
+- `CLERK_SECRET_KEY`
+- `CLERK_JWT_ISSUER_DOMAIN`
+- `CLERK_WEBHOOK_SECRET`
+
+Backend queue model/legacy path envs (if used):
+
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_MODEL`
+
+Agent worker (`apps/agent-worker`):
+
+- `CONVEX_URL` or `NEXT_PUBLIC_CONVEX_URL`
+- `CONVEX_ADMIN_KEY` or `CONVEX_DEPLOY_KEY`
+- Anthropic credentials (one required):
+  - `ANTHROPIC_OAUTH_TOKEN`
+  - `CLAUDE_CODE_OAUTH_TOKEN`
+  - `ANTHROPIC_API_KEY`
+- Optional worker tuning:
+  - `AGENT_WORKER_POLL_INTERVAL_MS` (default `1000`)
+  - `AGENT_WORKER_CONTEXT_LIMIT` (default `50`)
+  - `AGENT_WORKER_MAX_ATTEMPTS` (default `3`)
+  - `AGENT_WORKER_ID` (defaults to hostname+pid)
+
+TUI (`apps/tui`):
+
+- Provider/model selection:
+  - `ZENTHOR_AI_PROVIDER`, `ZENTHOR_MODEL`
+  - `TUI_PROVIDER`, `TUI_MODEL`
+  - `AI_PROVIDER`, `OPENAI_MODEL`, `ANTHROPIC_MODEL`
+  - `ZENTHOR_AI_STARTUP_INFO`, `ZENTHOR_TUI_STARTUP_INFO`
+  - `ZENTHOR_AI_QUIET_STARTUP`, `ZENTHOR_AI_COMPACT_STARTUP`
+- Credentials:
+  - `OPENAI_API_KEY`
+  - `ANTHROPIC_API_KEY` / `ANTHROPIC_OAUTH_TOKEN` / `CLAUDE_CODE_OAUTH_TOKEN`
+  - Codex auth file (`~/.codex/auth.json` or `$CODEX_HOME/auth.json`) is also supported
+- Convex sync (optional):
+  - `CONVEX_URL`/`NEXT_PUBLIC_CONVEX_URL`
+  - `CONVEX_ADMIN_KEY` or legacy `CONVEX_DEPLOY_KEY`
+
+TUI tool integrations:
+
+- `BRAVE_API_KEY` (web search)
+- `TODOIST_API_TOKEN` (todoist tool)
+- `PI_SKIP_VERSION_CHECK` (optional runtime flag)
+
+## Setup and run
+
+### Install
 
 ```bash
-git clone https://github.com/qwibitai/nanoclaw.git
-cd nanoclaw
-claude
+bun install
 ```
 
-Then run `/setup`. Claude Code handles everything: dependencies, authentication, container setup, service configuration.
+### Local development (recommended)
 
-## Philosophy
+Run each service in a separate terminal:
 
-**Small enough to understand.** One process, a few source files. No microservices, no message queues, no abstraction layers. Have Claude Code walk you through it.
+```bash
+# Backend (configure Convex and keep in sync)
+bun run --cwd apps/backend dev:setup
+bun run --cwd apps/backend dev
 
-**Secure by isolation.** Agents run in Linux containers (Apple Container on macOS, or Docker). They can only see what's explicitly mounted. Bash access is safe because commands run inside the container, not on your host.
+# Worker (required for async job processing)
+bun run --cwd apps/agent-worker dev
 
-**Built for one user.** This isn't a framework. It's working software that fits my exact needs. You fork it and have Claude Code make it match your exact needs.
+# Web app
+bun run --cwd apps/web dev
 
-**Customization = code changes.** No configuration sprawl. Want different behavior? Modify the code. The codebase is small enough that this is safe.
-
-**AI-native.** No installation wizard; Claude Code guides setup. No monitoring dashboard; ask Claude what's happening. No debugging tools; describe the problem, Claude fixes it.
-
-**Skills over features.** Contributors shouldn't add features (e.g. support for Telegram) to the codebase. Instead, they contribute [claude code skills](https://code.claude.com/docs/en/skills) like `/add-telegram` that transform your fork. You end up with clean code that does exactly what you need.
-
-**Best harness, best model.** This runs on Claude Agent SDK, which means you're running Claude Code directly. The harness matters. A bad harness makes even smart models seem dumb, a good harness gives them superpowers. Claude Code is (IMO) the best harness available.
-
-## What It Supports
-
-- **WhatsApp I/O** - Message Claude from your phone
-- **Isolated group context** - Each group has its own `CLAUDE.md` memory, isolated filesystem, and runs in its own container sandbox with only that filesystem mounted
-- **Main channel** - Your private channel (self-chat) for admin control; every other group is completely isolated
-- **Scheduled tasks** - Recurring jobs that run Claude and can message you back
-- **Web access** - Search and fetch content
-- **Container isolation** - Agents sandboxed in Apple Container (macOS) or Docker (macOS/Linux)
-- **Agent Swarms** - Spin up teams of specialized agents that collaborate on complex tasks (first personal AI assistant to support this)
-- **Optional integrations** - Add Gmail (`/add-gmail`) and more via skills
-
-## Usage
-
-Talk to your assistant with the trigger word (default: `@Andy`):
-
-```
-@Andy send an overview of the sales pipeline every weekday morning at 9am (has access to my Obsidian vault folder)
-@Andy review the git history for the past week each Friday and update the README if there's drift
-@Andy every Monday at 8am, compile news on AI developments from Hacker News and TechCrunch and message me a briefing
+# Optional terminal client
+bun run --cwd apps/tui dev
 ```
 
-From the main channel (your self-chat), you can manage groups and tasks:
+If you only need API/queue testing, run backend + worker first.
+The web UI expects a healthy worker to receive generated responses.
 
-```
-@Andy list all scheduled tasks across groups
-@Andy pause the Monday briefing task
-@Andy join the Family Chat group
-```
+## Useful workspace checks
 
-## Customizing
+From repo root:
 
-There are no configuration files to learn. Just tell Claude Code what you want:
-
-- "Change the trigger word to @Bob"
-- "Remember in the future to make responses shorter and more direct"
-- "Add a custom greeting when I say good morning"
-- "Store conversation summaries weekly"
-
-Or run `/customize` for guided changes.
-
-The codebase is small enough that Claude can safely modify it.
-
-## Contributing
-
-**Don't add features. Add skills.**
-
-If you want to add Telegram support, don't create a PR that adds Telegram alongside WhatsApp. Instead, contribute a skill file (`.claude/skills/add-telegram/SKILL.md`) that teaches Claude Code how to transform a NanoClaw installation to use Telegram.
-
-Users then run `/add-telegram` on their fork and get clean code that does exactly what they need, not a bloated system trying to support every use case.
-
-### RFS (Request for Skills)
-
-Skills we'd like to see:
-
-**Communication Channels**
-
-- `/add-telegram` - Add Telegram as channel. Should give the user option to replace WhatsApp or add as additional channel. Also should be possible to add it as a control channel (where it can trigger actions) or just a channel that can be used in actions triggered elsewhere
-- `/add-slack` - Add Slack
-- `/add-discord` - Add Discord
-
-**Platform Support**
-
-- `/setup-windows` - Windows via WSL2 + Docker
-
-**Session Management**
-
-- `/add-clear` - Add a `/clear` command that compacts the conversation (summarizes context while preserving critical information in the same session). Requires figuring out how to trigger compaction programmatically via the Claude Agent SDK.
-
-## Requirements
-
-- macOS or Linux
-- Node.js 20+
-- [Claude Code](https://claude.ai/download)
-- [Apple Container](https://github.com/apple/container) (macOS) or [Docker](https://docker.com/products/docker-desktop) (macOS/Linux)
-
-## Architecture
-
-```
-WhatsApp (baileys) --> SQLite --> Polling loop --> Container (Claude Agent SDK) --> Response
+```bash
+bun run static-analysis
+bun run build
+bun run lint
+bun run format:check
+bun run typecheck
+bun run test:run
 ```
 
-Single Node.js process. Agents execute in isolated Linux containers with mounted directories. Per-group message queue with concurrency control. IPC via filesystem.
+`bun run static-analysis` is wired to run all lint/format/typecheck/knip checks through Turbo.
 
-Key files:
+## Notes and current expectations
 
-- `src/index.ts` - Orchestrator: state, message loop, agent invocation
-- `src/channels/whatsapp.ts` - WhatsApp connection, auth, send/receive
-- `src/ipc.ts` - IPC watcher and task processing
-- `src/router.ts` - Message formatting and outbound routing
-- `src/group-queue.ts` - Per-group queue with global concurrency limit
-- `src/container-runner.ts` - Spawns streaming agent containers
-- `src/task-scheduler.ts` - Runs scheduled tasks
-- `src/db.ts` - SQLite operations (messages, groups, sessions, state)
-- `groups/*/CLAUDE.md` - Per-group memory
-
-## FAQ
-
-**Why WhatsApp and not Telegram/Signal/etc?**
-
-Because I use WhatsApp. Fork it and run a skill to change it. That's the whole point.
-
-**Why Docker?**
-
-Docker provides cross-platform support (macOS and Linux) and a mature ecosystem. On macOS, you can optionally switch to Apple Container via `/convert-to-apple-container` for a lighter-weight native runtime.
-
-**Can I run this on Linux?**
-
-Yes. Docker is the default runtime and works on both macOS and Linux. Just run `/setup`.
-
-**Is this secure?**
-
-Agents run in containers, not behind application-level permission checks. They can only access explicitly mounted directories. You should still review what you're running, but the codebase is small enough that you actually can. See [docs/SECURITY.md](docs/SECURITY.md) for the full security model.
-
-**Why no configuration files?**
-
-We don't want configuration sprawl. Every user should customize it to so that the code matches exactly what they want rather than configuring a generic system. If you like having config files, tell Claude to add them.
-
-**How do I debug issues?**
-
-Ask Claude Code. "Why isn't the scheduler running?" "What's in the recent logs?" "Why did this message not get a response?" That's the AI-native approach.
-
-**Why isn't the setup working for me?**
-
-I don't know. Run `claude`, then run `/debug`. If claude finds an issue that is likely affecting other users, open a PR to modify the setup SKILL.md.
-
-**What changes will be accepted into the codebase?**
-
-Security fixes, bug fixes, and clear improvements to the base configuration. That's it.
-
-Everything else (new capabilities, OS compatibility, hardware support, enhancements) should be contributed as skills.
-
-This keeps the base system minimal and lets every user customize their installation without inheriting features they don't want.
-
-## Community
-
-Questions? Ideas? [Join the Discord](https://discord.gg/VDdww8qS42).
-
-## License
-
-MIT
+- The queue worker is required for assistant responses in web flows.
+- The worker can run multiple instances; each worker can identify itself via `AGENT_WORKER_ID`.
+- TUI can run independently as a local assistant; Convex sync is optional and does not block startup.
+- Secrets in `.env*` files should be treated as local-only and must not be committed.

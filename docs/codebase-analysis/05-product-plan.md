@@ -8,9 +8,9 @@ A personal AI assistant accessible via WhatsApp (and optionally Telegram/Discord
 2. **Reminders via Todoist** - Create, manage, and track tasks/reminders through Todoist
 3. **Work Management via Linear** - Manage issues, track priorities, and stay on top of work
 
-## What NanoClaw Already Provides
+## What Zenthor Already Provides
 
-| Need                | NanoClaw Status               | Gap                           |
+| Need                | Zenthor Status               | Gap                           |
 | ------------------- | ----------------------------- | ----------------------------- |
 | WhatsApp messaging  | Built-in                      | None                          |
 | Telegram/Discord    | Available via skills          | None                          |
@@ -71,7 +71,7 @@ notes_fts (title, content, tags)
 - `todoist_get_projects()` - List projects
 - `todoist_delete_task(id)` - Delete task
 
-**Integration with scheduler:** Agent can create NanoClaw scheduled tasks that check Todoist for due items and send reminders proactively.
+**Integration with scheduler:** Agent can create Zenthor scheduled tasks that check Todoist for due items and send reminders proactively.
 
 **Todoist API:** https://developer.todoist.com/rest/v2/
 
@@ -156,7 +156,7 @@ notes_fts (title, content, tags)
 
 ## Rebranding Notes
 
-When forking NanoClaw for your product:
+When forking Zenthor for your product:
 
 1. `package.json` - name, description
 2. `src/config.ts` - ASSISTANT_NAME default, paths

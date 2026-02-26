@@ -155,7 +155,7 @@ IPC_POLL_INTERVAL = 1000; // IPC file polling: 1s
 ## Directory Structure
 
 ```
-nanoclaw/
+zenthor/
 ├── src/                     # Host process code
 │   ├── index.ts             # Orchestrator
 │   ├── channels/whatsapp.ts # WhatsApp channel

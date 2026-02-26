@@ -1,10 +1,10 @@
-# NanoClaw Codebase Analysis
+# Zenthor Codebase Analysis
 
-Complete analysis of the NanoClaw project for building a personal assistant focused on notes/documentation, reminders (Todoist), and work task management (Linear).
+Complete analysis of the Zenthor project for building a personal assistant focused on notes/documentation, reminders (Todoist), and work task management (Linear).
 
-## What is NanoClaw?
+## What is Zenthor?
 
-NanoClaw is a **lightweight personal Claude assistant** that runs in containers and communicates via WhatsApp. It's a minimal, security-first alternative to OpenClaw with ~24K LoC (vs OpenClaw's ~569K).
+Zenthor is a **lightweight personal Claude assistant** that runs in containers and communicates via WhatsApp. It's a minimal, security-first alternative to OpenClaw with ~24K LoC (vs OpenClaw's ~569K).
 
 **Key Stats:**
 
