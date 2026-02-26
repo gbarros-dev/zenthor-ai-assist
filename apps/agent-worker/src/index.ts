@@ -37,6 +37,7 @@ const customTools = [
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 const DEFAULT_POLL_INTERVAL_MS = 1000;
 const DEFAULT_CONTEXT_LIMIT = 50;
+const DEFAULT_MAX_ATTEMPTS = 3;
 const STREAM_UPDATE_INTERVAL_MS = 500;
 const STREAM_UPDATE_CHARS = 200;
 
@@ -61,6 +62,7 @@ interface WorkerConfig {
   pollIntervalMs: number;
   contextLimit: number;
   workerId: string;
+  maxAttempts: number;
 }
 
 function requiredEnv(name: string): string {
@@ -69,6 +71,23 @@ function requiredEnv(name: string): string {
     throw new Error(`${name} must be set`);
   }
   return value;
+}
+
+function resolveConvexAdminKey(): string {
+  const canonical = process.env.CONVEX_ADMIN_KEY?.trim();
+  if (canonical) {
+    return canonical;
+  }
+
+  const legacy = process.env.CONVEX_DEPLOY_KEY?.trim();
+  if (legacy) {
+    console.warn(
+      "[worker] CONVEX_DEPLOY_KEY is deprecated. Use CONVEX_ADMIN_KEY instead.",
+    );
+    return legacy;
+  }
+
+  throw new Error("CONVEX_ADMIN_KEY must be set (or legacy CONVEX_DEPLOY_KEY).");
 }
 
 function optionalIntEnv(name: string, fallback: number): number {
@@ -97,11 +116,12 @@ function resolveAnthropicCredential(): string {
 function readConfig(): WorkerConfig {
   const convexUrl =
     process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL ?? requiredEnv("CONVEX_URL");
-  const convexAdminKey = requiredEnv("CONVEX_ADMIN_KEY");
+  const convexAdminKey = resolveConvexAdminKey();
   const anthropicCredential = resolveAnthropicCredential();
   const anthropicModel = process.env.ANTHROPIC_MODEL;
   const pollIntervalMs = optionalIntEnv("AGENT_WORKER_POLL_INTERVAL_MS", DEFAULT_POLL_INTERVAL_MS);
   const contextLimit = optionalIntEnv("AGENT_WORKER_CONTEXT_LIMIT", DEFAULT_CONTEXT_LIMIT);
+  const maxAttempts = optionalIntEnv("AGENT_WORKER_MAX_ATTEMPTS", DEFAULT_MAX_ATTEMPTS);
   const workerId = process.env.AGENT_WORKER_ID ?? `${hostname()}-${process.pid}`;
 
   return {
@@ -112,6 +132,7 @@ function readConfig(): WorkerConfig {
     pollIntervalMs,
     contextLimit,
     workerId,
+    maxAttempts,
   };
 }
 
@@ -352,6 +373,7 @@ async function runWorker(config: WorkerConfig): Promise<void> {
           jobId: claimedJob.jobId,
           assistantMessageId: claimedJob.assistantMessageId,
           errorMessage,
+          maxAttempts: config.maxAttempts,
         });
       } catch (failPersistError) {
         console.error(

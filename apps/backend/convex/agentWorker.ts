@@ -4,6 +4,8 @@ import { internalMutation, internalQuery } from "./_generated/server";
 
 const DEFAULT_CONTEXT_LIMIT = 50;
 const MAX_CONTEXT_LIMIT = 200;
+const DEFAULT_MAX_ATTEMPTS = 3;
+const STALE_PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
 const DEFAULT_FAILURE_MESSAGE =
   "Sorry, I encountered an error processing your message. Please try again.";
 
@@ -13,6 +15,23 @@ export const claimNextPendingJob = internalMutation({
     contextLimit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const now = Date.now();
+    const staleCutoff = now - STALE_PROCESSING_TIMEOUT_MS;
+
+    const staleJob = await ctx.db
+      .query("agentQueue")
+      .withIndex("by_status", (q) => q.eq("status", "processing"))
+      .filter((q) => q.lt(q.field("startedAt"), staleCutoff))
+      .first();
+
+    if (staleJob && staleJob.startedAt !== null) {
+      await ctx.db.patch(staleJob._id, {
+        status: "pending",
+        workerId: undefined,
+        startedAt: undefined,
+      });
+    }
+
     const pendingJob = await ctx.db
       .query("agentQueue")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
@@ -23,7 +42,6 @@ export const claimNextPendingJob = internalMutation({
       return null;
     }
 
-    const now = Date.now();
     const contextLimit = Math.max(
       1,
       Math.min(MAX_CONTEXT_LIMIT, args.contextLimit ?? DEFAULT_CONTEXT_LIMIT),
@@ -46,14 +64,16 @@ export const claimNextPendingJob = internalMutation({
       attempts: (pendingJob.attempts ?? 0) + 1,
     });
 
-    const messages = await ctx.db
-      .query("messages")
-      .withIndex("by_conversation_created", (q) =>
-        q.eq("conversationId", pendingJob.conversationId),
-      )
-      .filter((q) => q.eq(q.field("status"), "sent"))
-      .order("asc")
-      .take(contextLimit);
+    const messages = (
+      await ctx.db
+        .query("messages")
+        .withIndex("by_conversation_created", (q) =>
+          q.eq("conversationId", pendingJob.conversationId),
+        )
+        .filter((q) => q.eq(q.field("status"), "sent"))
+        .order("desc")
+        .take(contextLimit)
+    ).reverse();
 
     return {
       jobId: pendingJob._id,
@@ -131,6 +151,7 @@ export const failJob = internalMutation({
     assistantMessageId: v.optional(v.id("messages")),
     errorMessage: v.string(),
     messageForUser: v.optional(v.string()),
+    maxAttempts: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const job = await ctx.db.get(args.jobId);
@@ -138,13 +159,35 @@ export const failJob = internalMutation({
       throw new ConvexError("Job not found");
     }
 
+    const maxAttempts = Math.max(1, args.maxAttempts ?? DEFAULT_MAX_ATTEMPTS);
+    const currentAttempts = job.attempts ?? 0;
+    const shouldRetry = currentAttempts < maxAttempts;
+
     const assistantMessageId = args.assistantMessageId ?? job.assistantMessageId;
     if (assistantMessageId) {
-      await ctx.db.patch(assistantMessageId, {
-        streaming: false,
-        status: "failed",
-        content: args.messageForUser ?? DEFAULT_FAILURE_MESSAGE,
+      if (shouldRetry) {
+        await ctx.db.patch(assistantMessageId, {
+          streaming: true,
+          status: "pending",
+          content: "",
+        });
+      } else {
+        await ctx.db.patch(assistantMessageId, {
+          streaming: false,
+          status: "failed",
+          content: args.messageForUser ?? DEFAULT_FAILURE_MESSAGE,
+        });
+      }
+    }
+
+    if (shouldRetry) {
+      await ctx.db.patch(args.jobId, {
+        status: "pending",
+        workerId: undefined,
+        startedAt: undefined,
+        errorMessage: args.errorMessage,
       });
+      return null;
     }
 
     await ctx.db.patch(args.jobId, {

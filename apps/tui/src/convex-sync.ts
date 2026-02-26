@@ -56,13 +56,28 @@ export class ConvexSync {
   }
 }
 
+function resolveConvexAdminKey(): string | undefined {
+  const canonical = process.env.CONVEX_ADMIN_KEY?.trim();
+  if (canonical) return canonical;
+
+  const legacy = process.env.CONVEX_DEPLOY_KEY?.trim();
+  if (legacy) {
+    console.warn(
+      "[convex-sync] CONVEX_DEPLOY_KEY is deprecated. Use CONVEX_ADMIN_KEY instead.",
+    );
+    return legacy;
+  }
+
+  return undefined;
+}
+
 /**
  * Creates a ConvexSync instance if CONVEX_URL and CONVEX_ADMIN_KEY are set.
  * Returns null if either is missing — TUI works fine without Convex.
  */
 export function createConvexSync(): ConvexSync | null {
   const convexUrl = process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL;
-  const adminKey = process.env.CONVEX_ADMIN_KEY;
+  const adminKey = resolveConvexAdminKey();
 
   if (!convexUrl || !adminKey) {
     return null;

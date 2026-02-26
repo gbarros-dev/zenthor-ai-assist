@@ -84,9 +84,9 @@ Implemented now:
    - `completeJob`
    - `failJob`
 3. New standalone worker service at `apps/agent-worker` using:
-   - `ConvexHttpClient` admin auth (`CONVEX_DEPLOY_KEY`)
-   - `@mariozechner/pi-agent-core` for the loop
-   - `@mariozechner/pi-ai` model registry and streaming
+  - `ConvexHttpClient` admin auth (`CONVEX_ADMIN_KEY`)
+  - `@mariozechner/pi-agent-core` for the loop
+  - `@mariozechner/pi-ai` model registry and streaming
 
 To run the worker:
 
@@ -97,12 +97,13 @@ bun run --cwd apps/agent-worker dev
 Required env vars:
 
 - `CONVEX_URL` (or `NEXT_PUBLIC_CONVEX_URL`)
-- `CONVEX_DEPLOY_KEY`
+- `CONVEX_ADMIN_KEY` (legacy fallback: `CONVEX_DEPLOY_KEY`, but this is deprecated)
 - One Anthropic credential:
   - `ANTHROPIC_API_KEY`, or
   - `ANTHROPIC_OAUTH_TOKEN`, or
   - `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`)
 - Optional: `ANTHROPIC_MODEL`, `AGENT_WORKER_ID`, `AGENT_WORKER_POLL_INTERVAL_MS`, `AGENT_WORKER_CONTEXT_LIMIT`
+- Optional: `AGENT_WORKER_MAX_ATTEMPTS` (defaults to 3)
 
 ## Phase 1: Make pi-agent-core the external worker loop (Web first)
 
