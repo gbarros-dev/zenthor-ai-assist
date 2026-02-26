@@ -9,8 +9,8 @@ import { T, useGT } from "gt-next";
 import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, ShieldAlertIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Streamdown, type PluginConfig } from "streamdown";
 import type { LinkSafetyModalProps } from "streamdown";
-import { Streamdown } from "streamdown";
 
 import { Button } from "@/components/ui/button";
 import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
@@ -285,7 +285,12 @@ export const MessageBranchPage = ({ className, ...props }: MessageBranchPageProp
 
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
-const streamdownPlugins = { cjk, code, math, mermaid };
+const streamdownPlugins: PluginConfig = {
+  cjk,
+  code: code as PluginConfig["code"],
+  math,
+  mermaid,
+};
 
 function LinkSafetyModal({ url, isOpen, onClose, onConfirm }: LinkSafetyModalProps) {
   let hostname: string;

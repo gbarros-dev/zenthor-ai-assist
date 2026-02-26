@@ -5,7 +5,7 @@ import type { Id } from "@zenthor-ai-assist/backend/convex/_generated/dataModel"
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export interface ChatMessage {
+interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
