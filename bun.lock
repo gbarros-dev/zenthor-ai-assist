@@ -22,6 +22,7 @@
       "dependencies": {
         "@mariozechner/pi-agent-core": "^0.54.2",
         "@mariozechner/pi-ai": "^0.54.2",
+        "@zenthor-ai-assist/tools": "workspace:*",
         "convex": "catalog:",
       },
       "devDependencies": {
@@ -52,10 +53,8 @@
       "version": "1.0.0",
       "dependencies": {
         "@mariozechner/pi-coding-agent": "^0.55.0",
-        "@mozilla/readability": "^0.6.0",
-        "@sinclair/typebox": "^0.34.48",
+        "@zenthor-ai-assist/tools": "workspace:*",
         "convex": "catalog:",
-        "linkedom": "^0.18.12",
       },
       "devDependencies": {
         "@types/node": "catalog:",
@@ -127,6 +126,19 @@
     "packages/observability": {
       "name": "@zenthor-ai-assist/observability",
       "version": "0.0.0",
+      "devDependencies": {
+        "@zenthor-ai-assist/config": "workspace:*",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/tools": {
+      "name": "@zenthor-ai-assist/tools",
+      "version": "0.0.0",
+      "dependencies": {
+        "@mozilla/readability": "^0.6.0",
+        "@sinclair/typebox": "^0.34.48",
+        "linkedom": "^0.18.12",
+      },
       "devDependencies": {
         "@zenthor-ai-assist/config": "workspace:*",
         "typescript": "catalog:",
@@ -1181,6 +1193,8 @@
     "@zenthor-ai-assist/env": ["@zenthor-ai-assist/env@workspace:packages/env"],
 
     "@zenthor-ai-assist/observability": ["@zenthor-ai-assist/observability@workspace:packages/observability"],
+
+    "@zenthor-ai-assist/tools": ["@zenthor-ai-assist/tools@workspace:packages/tools"],
 
     "@zenthor-ai-assist/tui": ["@zenthor-ai-assist/tui@workspace:apps/tui"],
 

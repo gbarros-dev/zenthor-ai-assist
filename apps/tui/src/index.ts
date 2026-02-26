@@ -11,9 +11,9 @@ import {
   SettingsManager,
   type ToolDefinition,
 } from "@mariozechner/pi-coding-agent";
+import { memoryTool, todoistTool, webFetchTool, webSearchTool } from "@zenthor-ai-assist/tools";
 
 import { createConvexSync } from "./convex-sync.js";
-import { memoryTool, todoistTool, webFetchTool, webSearchTool } from "./tools/index.js";
 
 const AGENT_DIR = join(homedir(), ".zenthor");
 

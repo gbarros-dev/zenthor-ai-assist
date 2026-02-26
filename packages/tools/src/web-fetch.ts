@@ -1,5 +1,6 @@
-import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
+
+import type { CustomTool } from "./types.js";
 
 const MAX_CONTENT_CHARS = 50_000;
 const MAX_RESPONSE_BYTES = 2_000_000;
@@ -42,10 +43,9 @@ async function fetchWithRedirects(url: string, signal: AbortSignal | undefined):
   throw new Error(`Too many redirects (max ${MAX_REDIRECTS})`);
 }
 
-function extractReadableContent(html: string, _url: string): string {
-  // Dynamic imports to avoid top-level load cost
-  const { parseHTML } = require("linkedom");
-  const { Readability } = require("@mozilla/readability");
+async function extractReadableContent(html: string, _url: string): Promise<string> {
+  const { parseHTML } = await import("linkedom");
+  const { Readability } = await import("@mozilla/readability");
 
   const { document } = parseHTML(html);
   const reader = new Readability(document, { charThreshold: 50 });
@@ -66,7 +66,7 @@ function extractReadableContent(html: string, _url: string): string {
   return parts.join("\n");
 }
 
-export const webFetchTool: ToolDefinition<typeof params> = {
+export const webFetchTool: CustomTool<typeof params> = {
   name: "web_fetch",
   label: "Web Fetch",
   description:
@@ -132,7 +132,7 @@ export const webFetchTool: ToolDefinition<typeof params> = {
         };
       }
 
-      const readable = extractReadableContent(body, url);
+      const readable = await extractReadableContent(body, url);
       return {
         content: [{ type: "text", text: readable.slice(0, maxChars) }],
         details: undefined,

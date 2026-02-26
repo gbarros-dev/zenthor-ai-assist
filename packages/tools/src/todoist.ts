@@ -1,5 +1,6 @@
-import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
+
+import type { CustomTool } from "./types.js";
 
 const BASE_URL = "https://api.todoist.com/api/v1";
 const TIMEOUT_MS = 15_000;
@@ -26,8 +27,8 @@ function noTokenResult() {
           "To set it up:",
           "1. Go to https://todoist.com/help/articles/find-your-api-token-938fac5",
           "2. Copy your API token",
-          "3. Add TODOIST_API_TOKEN=your-token to apps/tui/.env.local",
-          "4. Restart the TUI",
+          "3. Set TODOIST_API_TOKEN in your environment",
+          "4. Restart the application",
         ].join("\n"),
       },
     ],
@@ -171,7 +172,7 @@ function mapUiPriorityToApi(uiPriority: number): number {
   return Math.max(1, Math.min(4, 5 - uiPriority));
 }
 
-export const todoistTool: ToolDefinition<typeof params> = {
+export const todoistTool: CustomTool<typeof params> = {
   name: "todoist",
   label: "Todoist",
   description: [

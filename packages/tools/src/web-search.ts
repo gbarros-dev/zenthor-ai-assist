@@ -1,5 +1,6 @@
-import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
+
+import type { CustomTool } from "./types.js";
 
 const DEFAULT_MAX_RESULTS = 5;
 const MAX_RESULTS_CAP = 20;
@@ -63,7 +64,7 @@ function formatResults(results: BraveSearchResult[], query: string, altered?: st
   return lines.join("\n").trim();
 }
 
-export const webSearchTool: ToolDefinition<typeof params> = {
+export const webSearchTool: CustomTool<typeof params> = {
   name: "web_search",
   label: "Web Search",
   description:
@@ -83,8 +84,8 @@ export const webSearchTool: ToolDefinition<typeof params> = {
               "",
               "To set it up:",
               "1. Get a free API key at https://brave.com/search/api/ (2,000 queries/month free)",
-              "2. Add BRAVE_API_KEY=your-key to apps/tui/.env.local (or export it)",
-              "3. Restart the TUI",
+              "2. Set BRAVE_API_KEY in your environment",
+              "3. Restart the application",
               "",
               "In the meantime, you can use web_fetch to read specific URLs directly.",
             ].join("\n"),

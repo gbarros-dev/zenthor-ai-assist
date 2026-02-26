@@ -12,10 +12,8 @@
   },
   "dependencies": {
     "@mariozechner/pi-coding-agent": "^0.55.0",
-    "@mozilla/readability": "^0.6.0",
-    "@sinclair/typebox": "^0.34.48",
-    "convex": "catalog:",
-    "linkedom": "^0.18.12"
+    "@zenthor-ai-assist/tools": "workspace:*",
+    "convex": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

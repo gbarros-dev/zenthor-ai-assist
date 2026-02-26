@@ -9,8 +9,9 @@ import {
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 
-import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
+
+import type { CustomTool } from "./types.js";
 
 const MEMORY_DIR = join(homedir(), ".zenthor", "memory");
 
@@ -67,7 +68,7 @@ const params = Type.Object({
   ),
 });
 
-export const memoryTool: ToolDefinition<typeof params> = {
+export const memoryTool: CustomTool<typeof params> = {
   name: "memory",
   label: "Memory",
   description: [
