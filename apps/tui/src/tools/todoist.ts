@@ -1,5 +1,5 @@
-import { Type } from "@sinclair/typebox";
 import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
+import { Type } from "@sinclair/typebox";
 
 const BASE_URL = "https://api.todoist.com/api/v1";
 const TIMEOUT_MS = 15_000;
@@ -108,7 +108,8 @@ function formatPriority(apiPriority: number): string {
 
 function formatTask(t: TodoistTask): string {
   const parts = [`- [${t.id}] ${t.content}`];
-  if (t.due) parts.push(`  Due: ${t.due.string || t.due.date}${t.due.is_recurring ? " (recurring)" : ""}`);
+  if (t.due)
+    parts.push(`  Due: ${t.due.string || t.due.date}${t.due.is_recurring ? " (recurring)" : ""}`);
   if (t.priority > 1) parts.push(`  Priority: ${formatPriority(t.priority)}`);
   if (t.labels.length > 0) parts.push(`  Labels: ${t.labels.join(", ")}`);
   if (t.description) parts.push(`  Description: ${t.description.slice(0, 100)}`);
@@ -148,11 +149,15 @@ const params = Type.Object({
     }),
   ),
   due_string: Type.Optional(
-    Type.String({ description: 'Natural language due date, e.g. "tomorrow at 3pm", "every monday"' }),
+    Type.String({
+      description: 'Natural language due date, e.g. "tomorrow at 3pm", "every monday"',
+    }),
   ),
   due_date: Type.Optional(Type.String({ description: "Due date in YYYY-MM-DD format" })),
   // get / update / complete / delete
-  task_id: Type.Optional(Type.String({ description: "Task ID (required for get/update/complete/reopen/delete)" })),
+  task_id: Type.Optional(
+    Type.String({ description: "Task ID (required for get/update/complete/reopen/delete)" }),
+  ),
   // list_tasks filter
   filter: Type.Optional(
     Type.String({
@@ -242,7 +247,13 @@ export const todoistTool: ToolDefinition<typeof params> = {
       case "get_task": {
         if (!args.task_id) return errorResult("task_id is required for get_task");
 
-        const result = await todoistFetch(token, "GET", `/tasks/${args.task_id}`, undefined, signal);
+        const result = await todoistFetch(
+          token,
+          "GET",
+          `/tasks/${args.task_id}`,
+          undefined,
+          signal,
+        );
         if (!result.ok) return errorResult(`Failed to get task: ${result.error}`);
 
         const task = result.data as TodoistTask;
@@ -264,7 +275,9 @@ export const todoistTool: ToolDefinition<typeof params> = {
         else if (args.due_date) body.due_date = args.due_date;
 
         if (Object.keys(body).length === 0) {
-          return errorResult("No fields to update. Provide content, description, labels, priority, or due_string.");
+          return errorResult(
+            "No fields to update. Provide content, description, labels, priority, or due_string.",
+          );
         }
 
         const result = await todoistFetch(token, "POST", `/tasks/${args.task_id}`, body, signal);
@@ -280,7 +293,13 @@ export const todoistTool: ToolDefinition<typeof params> = {
       case "complete_task": {
         if (!args.task_id) return errorResult("task_id is required for complete_task");
 
-        const result = await todoistFetch(token, "POST", `/tasks/${args.task_id}/close`, undefined, signal);
+        const result = await todoistFetch(
+          token,
+          "POST",
+          `/tasks/${args.task_id}/close`,
+          undefined,
+          signal,
+        );
         if (!result.ok) return errorResult(`Failed to complete task: ${result.error}`);
 
         return {
@@ -292,7 +311,13 @@ export const todoistTool: ToolDefinition<typeof params> = {
       case "reopen_task": {
         if (!args.task_id) return errorResult("task_id is required for reopen_task");
 
-        const result = await todoistFetch(token, "POST", `/tasks/${args.task_id}/reopen`, undefined, signal);
+        const result = await todoistFetch(
+          token,
+          "POST",
+          `/tasks/${args.task_id}/reopen`,
+          undefined,
+          signal,
+        );
         if (!result.ok) return errorResult(`Failed to reopen task: ${result.error}`);
 
         return {
@@ -304,7 +329,13 @@ export const todoistTool: ToolDefinition<typeof params> = {
       case "delete_task": {
         if (!args.task_id) return errorResult("task_id is required for delete_task");
 
-        const result = await todoistFetch(token, "DELETE", `/tasks/${args.task_id}`, undefined, signal);
+        const result = await todoistFetch(
+          token,
+          "DELETE",
+          `/tasks/${args.task_id}`,
+          undefined,
+          signal,
+        );
         if (!result.ok) return errorResult(`Failed to delete task: ${result.error}`);
 
         return {

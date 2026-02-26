@@ -1,12 +1,11 @@
-import { Type } from "@sinclair/typebox";
 import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
+import { Type } from "@sinclair/typebox";
 
 const MAX_CONTENT_CHARS = 50_000;
 const MAX_RESPONSE_BYTES = 2_000_000;
 const MAX_REDIRECTS = 5;
 
-const USER_AGENT =
-  "Mozilla/5.0 (compatible; ZenthorBot/1.0; +https://github.com/zenthor-hub)";
+const USER_AGENT = "Mozilla/5.0 (compatible; ZenthorBot/1.0; +https://github.com/zenthor-hub)";
 
 const params = Type.Object({
   url: Type.String({ description: "The URL to fetch" }),
@@ -22,10 +21,7 @@ const params = Type.Object({
   ),
 });
 
-async function fetchWithRedirects(
-  url: string,
-  signal: AbortSignal | undefined,
-): Promise<Response> {
+async function fetchWithRedirects(url: string, signal: AbortSignal | undefined): Promise<Response> {
   let currentUrl = url;
   for (let i = 0; i < MAX_REDIRECTS; i++) {
     const response = await fetch(currentUrl, {
@@ -56,7 +52,10 @@ function extractReadableContent(html: string, _url: string): string {
   const article = reader.parse();
 
   if (!article?.textContent) {
-    return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    return html
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   const parts: string[] = [];
@@ -85,7 +84,9 @@ export const webFetchTool: ToolDefinition<typeof params> = {
 
       if (!response.ok) {
         return {
-          content: [{ type: "text", text: `HTTP ${response.status} ${response.statusText} for ${url}` }],
+          content: [
+            { type: "text", text: `HTTP ${response.status} ${response.statusText} for ${url}` },
+          ],
           details: undefined,
         };
       }

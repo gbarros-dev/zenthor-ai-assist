@@ -1,5 +1,5 @@
-import { Type } from "@sinclair/typebox";
 import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
+import { Type } from "@sinclair/typebox";
 
 const DEFAULT_MAX_RESULTS = 5;
 const MAX_RESULTS_CAP = 20;
@@ -12,9 +12,7 @@ const params = Type.Object({
       description: "Maximum number of results to return (default: 5, max: 20)",
     }),
   ),
-  offset: Type.Optional(
-    Type.Number({ description: "Result offset for pagination (default: 0)" }),
-  ),
+  offset: Type.Optional(Type.Number({ description: "Result offset for pagination (default: 0)" })),
 });
 
 interface BraveSearchResult {
@@ -85,7 +83,7 @@ export const webSearchTool: ToolDefinition<typeof params> = {
               "",
               "To set it up:",
               "1. Get a free API key at https://brave.com/search/api/ (2,000 queries/month free)",
-              '2. Add BRAVE_API_KEY=your-key to apps/tui/.env.local (or export it)',
+              "2. Add BRAVE_API_KEY=your-key to apps/tui/.env.local (or export it)",
               "3. Restart the TUI",
               "",
               "In the meantime, you can use web_fetch to read specific URLs directly.",
