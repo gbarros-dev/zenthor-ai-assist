@@ -1,16 +1,38 @@
-import { hostname } from "os";
+import { readFileSync } from "node:fs";
+import { homedir, hostname } from "node:os";
+import { join } from "node:path";
 
-import { Agent } from "@mariozechner/pi-agent-core";
+import { Agent, type AgentTool } from "@mariozechner/pi-agent-core";
 import { getModels, type AssistantMessage, type Message, type Usage } from "@mariozechner/pi-ai";
+import { memoryTool, todoistTool, webFetchTool, webSearchTool } from "@zenthor-ai-assist/tools";
 import { ConvexHttpClient } from "convex/browser";
 
-const SYSTEM_PROMPT = `You are Zenthor, a helpful personal AI assistant. You help with organizing thoughts, managing notes, answering questions, and having productive conversations.
+const BASE_SYSTEM_PROMPT = `You are Zenthor, a helpful personal AI assistant. You help with organizing thoughts, managing notes, answering questions, and having productive conversations.
 
 Guidelines:
 - Be concise and helpful
 - Use markdown formatting when it improves readability
 - If you don't know something, say so honestly
 - Be friendly but professional`;
+
+function buildSystemPrompt(): string {
+  // Load ~/.zenthor/CLAUDE.md if it exists — same persona/tool docs as the TUI
+  try {
+    const claudeMdPath = join(homedir(), ".zenthor", "CLAUDE.md");
+    const claudeMd = readFileSync(claudeMdPath, "utf-8");
+    return `${BASE_SYSTEM_PROMPT}\n\n${claudeMd}`;
+  } catch {
+    return BASE_SYSTEM_PROMPT;
+  }
+}
+
+const SYSTEM_PROMPT = buildSystemPrompt();
+const customTools = [
+  webFetchTool,
+  webSearchTool,
+  todoistTool,
+  memoryTool,
+] as unknown as AgentTool[];
 
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 const DEFAULT_POLL_INTERVAL_MS = 1000;
@@ -212,6 +234,8 @@ async function processClaimedJob(
     },
     getApiKey: (provider) => (provider === "anthropic" ? config.anthropicCredential : undefined),
   });
+
+  agent.setTools(customTools);
 
   let streamedText = "";
   let lastPersistedText = "";

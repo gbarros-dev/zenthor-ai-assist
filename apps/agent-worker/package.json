@@ -13,6 +13,7 @@
   "dependencies": {
     "@mariozechner/pi-agent-core": "^0.54.2",
     "@mariozechner/pi-ai": "^0.54.2",
+    "@zenthor-ai-assist/tools": "workspace:*",
     "convex": "catalog:"
   },
   "devDependencies": {
