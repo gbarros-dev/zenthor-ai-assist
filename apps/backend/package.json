@@ -14,13 +14,10 @@
     "clean": "git clean -xdf .cache .turbo node_modules convex/_generated"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.78.0",
-    "@clerk/backend": "^2.32.0",
-    "@mariozechner/pi-agent-core": "^0.54.2",
-    "@mariozechner/pi-ai": "^0.54.2",
+    "@mariozechner/pi-agent-core": "^0.55.1",
+    "@mariozechner/pi-ai": "^0.55.1",
     "convex": "catalog:",
-    "convex-helpers": "^0.1.113",
-    "svix": "^1.85.0",
+    "convex-helpers": "^0.1.114",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -33,11 +30,6 @@
       "oxlint",
       "oxfmt",
       "knip"
-    ],
-    "ignore": [
-      "convex/**/*.test.ts",
-      "tests/_test-fakes.ts",
-      "tests/_test-run.ts"
     ]
   }
 }
