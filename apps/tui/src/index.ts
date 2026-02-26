@@ -13,7 +13,7 @@ import {
 } from "@mariozechner/pi-coding-agent";
 
 import { createConvexSync } from "./convex-sync.js";
-import { todoistTool, webFetchTool, webSearchTool } from "./tools/index.js";
+import { memoryTool, todoistTool, webFetchTool, webSearchTool } from "./tools/index.js";
 
 const AGENT_DIR = join(homedir(), ".zenthor");
 
@@ -345,7 +345,12 @@ async function main(): Promise<void> {
     modelRegistry,
     model: initialModel,
     settingsManager,
-    customTools: [webFetchTool, webSearchTool, todoistTool] as unknown as ToolDefinition[],
+    customTools: [
+      webFetchTool,
+      webSearchTool,
+      todoistTool,
+      memoryTool,
+    ] as unknown as ToolDefinition[],
   });
 
   // ── Convex sync (optional) ───────────────────────────────────────────
